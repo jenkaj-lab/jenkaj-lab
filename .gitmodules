@@ -4,3 +4,9 @@
 [submodule "themes/geekblog"]
 	path = themes/geekblog
 	url = https://github.com/thegeeklab/hugo-geekblog.git
+[submodule "themes/hugo-profile"]
+	path = themes/hugo-profile
+	url = https://github.com/gurusabarish/hugo-profile.git
+[submodule "themes/docsy"]
+	path = themes/docsy
+	url = https://github.com/google/docsy.git
