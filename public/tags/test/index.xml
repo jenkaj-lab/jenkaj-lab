@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Test on My MITRE ATT&amp;CK Journey</title>
+    <link>http://localhost:1313/jenkaj-lab/tags/test/</link>
+    <description>Recent content in Test on My MITRE ATT&amp;CK Journey</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-gb</language>
+    <atom:link href="http://localhost:1313/jenkaj-lab/tags/test/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>First Post Test</title>
+      <link>http://localhost:1313/jenkaj-lab/posts/first-post-test/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/jenkaj-lab/posts/first-post-test/</guid>
+      <description>First Post Test </description>
+    </item>
+  </channel>
+</rss>
