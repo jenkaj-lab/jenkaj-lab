@@ -3,9 +3,20 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>http://localhost:1313/jenkaj-lab/</loc>
+    <lastmod>2025-01-16T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/jenkaj-lab/categories/</loc>
+    <loc>http://localhost:1313/jenkaj-lab/posts/test/</loc>
+    <lastmod>2025-01-16T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/jenkaj-lab/posts/</loc>
+    <lastmod>2025-01-16T00:00:00+00:00</lastmod>
   </url><url>
     <loc>http://localhost:1313/jenkaj-lab/tags/</loc>
+    <lastmod>2025-01-16T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/jenkaj-lab/tags/test/</loc>
+    <lastmod>2025-01-16T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>http://localhost:1313/jenkaj-lab/categories/</loc>
   </url>
 </urlset>
