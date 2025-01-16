@@ -1,0 +1,4 @@
+baseURL = 'https://jenkaj-lab.github.io/jenkaj-lab/'
+languageCode = 'en-gb'
+title = 'My MITRE ATT&CK Journey'
+theme = 'maverick'
