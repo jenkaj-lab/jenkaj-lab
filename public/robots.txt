@@ -1,3 +1,4 @@
 User-agent: *
-Disallow:
-Sitemap: https://ronaldsvilcins.com/sitemap.xml
+Disallow: /categories/*
+Disallow: /tags/*
+Sitemap: http://localhost:1313/jenkaj-lab/sitemap.xml

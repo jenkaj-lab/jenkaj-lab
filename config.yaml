@@ -1,7 +1,7 @@
 ---
-baseURL: https://jenkaj-lab.github.io/jenkaj-lab
+baseURL: https://jenkaj-lab.github.io/jenkaj-lab/
 title: MITRE ATT&CK
-theme: geekblog
+theme: hugo-geekblog
 pygmentsUseClasses: true
 pygmentsCodeFences: true
 enableGitInfo: true
