@@ -1,3 +1,10 @@
+---
+title: My First Post
+date: 2025-01-26
+draft: false
+author: Alex Jenkins
+---
+
 Hello. My name is Alex Jenkins. I am currently working as a SOC analyst for an MSSP and have been for about 7 months. This post marks the start of my blog. 
 
 This blog will contain articles from my personal hands-on experience with the MITRE ATT&CK framework, documenting my journey and experience. In this journey I will be exploring all of MITRE's tactics, techniques and sub-techniques from the perspectives of both the red and blue team.
