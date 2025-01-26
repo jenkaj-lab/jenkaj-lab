@@ -1,5 +1,5 @@
 ---
-title: My First Post
+title: MITRE ATT&CK Journey
 date: 2025-01-26
 draft: false
 author: Alex Jenkins
