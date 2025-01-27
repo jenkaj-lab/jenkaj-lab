@@ -41,11 +41,11 @@ Nmap done: 1 IP address (1 host up) scanned in 0.12 seconds
 
 **Description**
 
-| Flag | Description                                                                                                                                                                        |
-| ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| sT   | Performs a full three-way TCP handshake, mimicking the normal connection flow of applications and hopefully blending in with legitimate traffic.                                   |
-| Pn   | Based on the assumptions, host discover is not required and ICMP requests can be deactivated. Ping scans are generally detected and blocked by firewalls.                          |
-| p389 | Only scan the port of interest. Doing so creates less noise on the host than scanning the top 1,000 most common ports, with the additional benefit of being a faster scan overall. |
+| Flag | Description                                                                                                                                                                                               |
+| ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| sT   | Performs a full three-way TCP handshake, mimicking the normal connection flow of applications and hopefully blending in with legitimate traffic.                                                          |
+| Pn   | Based on the assumptions, host discovery is not required and ICMP requests can be deactivated. Ping scans are generally detected and blocked by firewalls so this is generally a good idea in most cases. |
+| p389 | Only scan the port of interest. Doing so creates less noise on the host than scanning the top 1,000 most common ports, with the additional benefit of being a faster scan overall.                        |
 ## Brute Force
 
 ```python
@@ -84,7 +84,7 @@ Now for the command. This is the command that's being run (with all the variable
 ldapsearch -H "ldap://192.168.1.138" -D "scarab" -b "DC=backyard,DC=local" -w "abc123"
 ```
 
-ldapsearch is used to query an LDAP server for directory information. In this case it's being used to validate credentials because any failed logins will return the following error message:
+ldapsearch is used to query an LDAP server for directory information. In this case it's being used to validate credentials because a successful login will return a code with the value 0. For reference, any failed logins will return the following error message (which was how I configured the script initially before discovering the successful logon code):
 
 ```
 ldap_bind: Invalid credentials (49)
@@ -94,8 +94,8 @@ The command does the following:
 
 | Flag | Description                                                                                                                                            |
 | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| -H   | Used to specify the LDAP server to connect with. This must be prefixed with *ldap://*, then followed with an IP address or domain name.                |
-| -D   | The Distinguished Name (DN) of the user i.e. the username.                                                                                             |
+| -H   | Used to specify the LDAP server to connect with. This must be prefixed with ldap://, and followed with an IP address or domain name.                   |
+| -D   | The Distinguished Name (DN) of the user aka the username.                                                                                              |
 | -w   | The password used to authenticate. Populated using a word-list in the for loop.                                                                        |
 | -b   | The **base** Domain Name (DN) from which to begin the search. In this case I've chosen the root domain. Omitting this will result in "no such object". |
 
