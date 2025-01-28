@@ -4,9 +4,6 @@ date: 2025-01-26
 draft: false
 author: Alex Jenkins
 ---
-
-
-# Red Team
 ## Introduction
 In this article we will perform a password guessing attack from the perspective of the adversary. The process begins by using **nmap** to scan the host and determine if the Lightweight Directory Access Protocol (LDAP) port is open. Once the LDAP service has been confirmed, a custom python script will be used to brute force a user's password with **ldapsearch**.
 
