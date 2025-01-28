@@ -19,7 +19,6 @@ For this red team exercise, it is assumed that the adversary has performed the i
 ## LDAP Discovery
 As discussed, the tool used to discover the LDAP port status will be nmap. Efforts have been made to ensure the nmap scan does not create too much noise - only scanning the relevant port and address, and revoking ICMP scans. A full example of the scan used during this engagement, including my specific output, and a description of each command is shown below:
 
-
 **Input**
 
 ```
@@ -46,7 +45,9 @@ Nmap done: 1 IP address (1 host up) scanned in 0.12 seconds
 | sT   | Performs a full three-way TCP handshake, mimicking the normal connection flow of applications and hopefully blending in with legitimate traffic.                                                          |
 | Pn   | Based on the assumptions, host discovery is not required and ICMP requests can be deactivated. Ping scans are generally detected and blocked by firewalls so this is generally a good idea in most cases. |
 | p389 | Only scan the port of interest. Doing so creates less noise on the host than scanning the top 1,000 most common ports, with the additional benefit of being a faster scan overall.                        |
+
 nmap's output shows that the LDAP port is indeed open on its standard port of 389, which means that it is reachable and we can begin our attack.
+
 ## Brute Force
 I've decided to use the ldapsearch tool for this attack. This tool is used to open a connection to an LDAP server, bind (or authenticate into the directory server), and perform a search query based on the input. We are interested specifically in **bind** in this case, because a successful authentication will indicate a correctly guessed password.
 
@@ -62,6 +63,7 @@ ldapsearch -H "ldap://192.168.1.138" -D "scarab" -b "DC=backyard,DC=local" -w "a
 | -D   | The Distinguished Name (DN) of the user aka the username.                                                                                              |
 | -w   | The password used to bind. This can be populated using a word-list to automate the process.                                                            |
 | -b   | The **base** Domain Name (DN) from which to begin the search. In this case I've chosen the root domain. Omitting this will result in "no such object". |
+
 A successful ldapsearch bind will return directory listings for the given base DN and a return code of 0. This return code is useful because it can be used to determine if a login was successful or not. For example, when a login is unsuccessful with invalid credentials the following output is received: 
 
 ```
