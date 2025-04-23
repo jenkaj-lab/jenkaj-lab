@@ -64,7 +64,7 @@ A successful ldapsearch bind will return directory listings for the given base D
 ldap_bind: Invalid credentials (49)
 ```
 
-That's great and we can validate the login now, but manually using the ldapsearch command repeatedly to iterate through the rockyou password list is tedious and inefficient. Therefore, I've built it into a Python script. 
+Manually using the ldapsearch command to repeatedly iterate through the rockyou wordlist is tedious and inefficient, so to aid in this process I created a custom python script (shown below). 
 
 ```python
 import subprocess
