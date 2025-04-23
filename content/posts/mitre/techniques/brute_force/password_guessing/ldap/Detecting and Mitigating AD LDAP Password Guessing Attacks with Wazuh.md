@@ -4,7 +4,6 @@ date: 2025-01-26
 draft: false
 author: Alex Jenkins
 ---
-# Blue Team
 ## Assumptions
 - Wazuh is configured and listening to AD logs
 
@@ -14,14 +13,14 @@ author: Alex Jenkins
 3. Add a filter for 'data.win.eventdata.targetUserName: scarab'
 4. Filter for the last hour
 
-After running the ldap_brute_forcer.py script we can see from the logs that there are 9 authentication failures, and one success. This lines up perfectly with the rockyou.txt wordlist, and is showing exactly as expected. Digging into these failed logins further will unveil some key information which describes the failed login in more det the following key data can be extracted:
+After running the ldap_brute_forcer.py script we can see from the logs that there are 9 authentication failures, and one success. This lines up perfectly with the rockyou.txt wordlist, and is showing exactly as expected. Digging into these failed logins further will unveil some key information which describes the failed logins in more detail:
 
 > data.win.eventdata.status: 0xc000006d  
 data.win.eventdata.subStatus: 0xc000006a  
 data.win.eventdata.targetUserName: scarab  
 data.win.eventdata.ipAddress: 192.168.1.236  
 
-This information is important because it describes login failures through the status and substatus codes. It gives information regarding the source IP address of the login failure and the account the logon was attempted for. Status code 0xc000006d is the generic code for a logon failure, stating the the attempted logon is invalid. Microsoft state that "this is either due to a bad username or other authentication information". 0xc000006a is a substatus code for 0xc000006d which elaborates on the authentication failure. This code explains that the value provided as the current password is not correct. One final important bit of information is the logon type. In this case the logon type is 3, which indicates that this is a network logon and not an interactive session.
+This information is important because it describes login failures through the status and substatus codes. It gives information regarding the source IP address of the login failure and the account the logon was attempted for. Status code 0xc000006d is the generic code for a logon failure, stating that the attempted logon is invalid. Microsoft state that "this is either due to a bad username or other authentication information". 0xc000006a is a substatus code for 0xc000006d which elaborates on the authentication failure. This code explains that the value provided as the current password is not correct. One final important bit of information is the logon type. In this case the logon type is 3, which indicates that this is a network logon and not an interactive session.
 
 ![Failed Login](/failed_login.png)
 
