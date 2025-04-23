@@ -23,11 +23,11 @@ data.win.eventdata.ipAddress: 192.168.1.236
 
 This information is important because it describes login failures through the status and substatus codes. It gives information regarding the source IP address of the login failure and the account the logon was attempted for. Status code 0xc000006d is the generic code for a logon failure, stating the the attempted logon is invalid. Microsoft state that "this is either due to a bad username or other authentication information". 0xc000006a is a substatus code for 0xc000006d which elaborates on the authentication failure. This code explains that the value provided as the current password is not correct. One final important bit of information is the logon type. In this case the logon type is 3, which indicates that this is a network logon and not an interactive session.
 
-![Failed Login](/assets/failed_login.png)
+![Failed Login](jenkaj-lab/assets/failed_login.png)
 
 The 10th and final event resulting from the brute force script is a logoff event. This is a little strange because I was expecting a logon success, but this appears to be a caveat of ldapsearch and bind. When a bind is performed all it does is prove a user's identity, and there is no persistent "logged in" state. Instead, the ldapsearch command processes the search request and immediately closes the connection. To find out more about this event I grabbed the data.win.system.eventID, which is 4634 in this case, and looked it up in [Microsoft's documentation](learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/event-4634).
 
-![Logoff](/assets/logoff.png)
+![Logoff](jenkaj-lab/assets/logoff.png)
 
 To summarize: Event code 4634 shows that the logon session was terminated and no longer exists. This code differs from 4647, which is a logoff event initiated by a user directly. This non-user logoff may sometimes be correlated with 4624, which indicates a successful logon. In this case, however, there is no correlation to be found.
 
@@ -36,23 +36,23 @@ The new found information tells me that in future brute force cases I should be 
 ### Rule Creation
 Now that we've gone through and manually detected the attack, we can grab our key data that we noted at the beginning and start to write some detection rules. These will alert us whenever this type of activity is seen again. In Wazuh, this can be done by navigating to the "Monitors" tab under Explore/Alerting, then clicking "Create monitor". I'll include screenshots of my configurations as we go with little explanations as to why I've made some of my decisions.
 
-![Monitor Details](/assets/monitor_details.png)
+![Monitor Details](jenkaj-lab/assets/monitor_details.png)
 
 Most of this is default with the exception of the frequency. Obviously this is up to you, but I like to be reminded every 30 minutes if a brute force is detected. My reasoning is that I want response time to be quick for a brute force detection, because any delay could lead to an account compromise. If you wait too long between alerts it could already be too late by the time it comes through. If you want it sooner for testing purposes you can run it every minute.
 
-![Select Data](/assets/select_data.png)
+![Select Data](jenkaj-lab/assets/select_data.png)
 
 Most of this is default, I've made the time field the timestamp because that just felt the most logical, and I've used the * wildcard for indexes to include them all.
 
-![Query](/assets/query.png)
+![Query](jenkaj-lab/assets/query.png)
 
 The query section is the fun part. I would recommend first setting the time range to the same as the time in your monitor details so that you don't get spammed with alerts. We're filtering for the status and substatus codes, and counting the number of substatus codes. This count will allow us to create a detection rule based on the number of login failures, grouped on the IP address. With the count setup you can make a trigger rule.
 
-![Trigger Rule](/assets/trigger.png)
+![Trigger Rule](jenkaj-lab/assets/trigger.png)
 
 And there you go. The rule is setup. You can make an action if you want which will notify you whenever this alert is triggered, I like to have mine notify me on my phone through Slack, but that is outside the scope of this lab. Once you save this monitor an alert will be triggered every time 5 failures, grouped by IP address, are detected with the substatus 0xc000006a. Now run your script again to check to see if it works, you should see at least one alert (don't forget to wait the time you allocated to the monitor).
 
-![Alerts](/assets/alert.png)
+![Alerts](jenkaj-lab/assets/alert.png)
 
 Great. That's the detection rule setup, but what about mitigation?
 
@@ -84,7 +84,7 @@ To change the account lockout policy open the Group Policy Management Editor in 
 
 Now when the script is run it continues running beyond the correct password, never completing because the account gets locked before it can successfully authenticate. When looking at this in Wazuh an event can be found showing that the account was locked out with the [Event ID 4740](learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/event-4740).
 
-![Account Lockout](/assets/account_lockout.png)
+![Account Lockout](jenkaj-lab/assets/account_lockout.png)
 
 This event shows that the mitigation was successful, and that this method of brute force no longer works. Obviously this has limitations, and the attacker could still have gained access if they guessed correctly within the first 4 attempts, but with stronger password policies the likelihood of guessing this correctly is very low. If you wish to adopt stronger password policies I recommend following the most up-to-date [NIST Guidelines](https://pages.nist.gov/800-63-4/sp800-63b.html) to understand what makes a strong password, as this is subject to change.
 
