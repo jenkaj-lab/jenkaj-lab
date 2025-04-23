@@ -81,7 +81,7 @@ Given my current constraints I will be enforcing account lockout. There are thre
 
 To change the account lockout policy open the Group Policy Management Editor in Windows Server, and navigate to Computer Configuration/Policies/Windows Settings/Security Settings/Account Policies/Account Lockout Policy. I've configured mine to lockout the account for 30 minutes if more than 5 invalid logon attempts are made. The counter will reset after another 30 minutes. 
 
-Now when the script is run it continues running beyond the correct password, never completing because the account gets locked before it can successfully authenticate. When looking at this in Wazuh an event can be found showing that the account was locked out with the [Event ID 4740](learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/event-4740).
+Now when the script is run it continues running beyond the correct password, never completing because the account gets locked before it can successfully authenticate. When looking at this in Wazuh an event can be found showing that the account was locked out with the [Event ID 4740](https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/event-4740).
 
 ![Account Lockout](/account_lockout.png)
 
