@@ -11,7 +11,7 @@ author: Alex Jenkins
 | Sub-Technique | T1110.001 | Password Guessing |
 
 # Introduction
-In this lab I will be demonstrating the MITRE ATT&CK sub-technique T1110.001: Password Guessing. This involves exploiting Active Directory's (AD) Lightweight Directory Access Protocol (LDAP), harnessing its authentication mechanism to brute force a known user's password. Wazuh is used to analyze the logs generated resulting from both the authentication failures and success post account compromise.
+In this lab I will be demonstrating the MITRE ATT&CK sub-technique `T1110.001: Password Guessing`. This involves exploiting Active Directory's (AD) Lightweight Directory Access Protocol (LDAP), harnessing its authentication mechanism to brute force a known user's password. Wazuh is used to analyze the logs generated resulting from both the authentication failures and success post account compromise.
 
 ### Assumptions
 1. AD is installed and running, configured with a Domain Controller (DC).
@@ -29,7 +29,7 @@ LDAP is a communication protocol designed for accessing directory services. It i
 
 # Configuration
 ### Modify Password Policies
-The first step to this exercise is to ensure a user is created. It may be necessary to change the default password policy in your AD server to ensure that a vulnerable password may be used. To do that open Group Policy Management Editor, navigate to Computer Configuration/Policies/Windows Settings/Security Settings/Account Policies/Password Policy and set the minimum password length to a low value - I've used a length of five. I also took the liberty of disabling the "Password must meet complexity requirements" policy. 
+The first step to this exercise is to ensure a user is created. It may be necessary to change the default password policy in your AD server to ensure that a vulnerable password may be used. To do that open Group Policy Management Editor, navigate to `Computer Configuration/Policies/Windows Settings/Security Settings/Account Policies/Password Policy` and set the minimum password length to a low value. I've used a length of five. I also took the liberty of disabling the `Password must meet complexity requirements` policy. 
 
 | Policy                                     | Setting      |
 | ------------------------------------------ | ------------ |
@@ -37,7 +37,7 @@ The first step to this exercise is to ensure a user is created. It may be necess
 | password must meet complexity requirements | disabled     |
 
 ### Create a new user
-Next, open Active Directory Users and Computers. Locate your domain, right click the *Users* folder, and create a new user. For this exercise I'm going to be using a password from the rockyou wordlist, which is readily available in Kali Linux in */usr/share/wordlists* and just need to be extracted. You can do that with the *gunzip* command. I decided to use the 10th password in this list to simplify testing of blue team's patches. Once you've picked a password fill in the user details, uncheck "User must change password at next logon", and check "Password never expires". It should go without saying that in production environments this is not an ideal setup, but is much more convenient for our use-case. If you want to follow along, these are the credentials I used:
+Next, open Active Directory Users and Computers. Locate your domain, right click the Users folder, and create a new user. For this exercise I'm going to be using a password from the rockyou wordlist, which is readily available in Kali Linux in `/usr/share/wordlists` and just need to be extracted. You can do that with the gunzip command. I decided to use the 10th password in this list to simplify testing of blue team's patches. Once you've picked a password fill in the user details, uncheck `User must change password at next logon`, and check `Password never expires`. It should go without saying that in production environments this is not an ideal setup, but is much more convenient for our use-case. If you want to follow along, these are the credentials I used:
 
 | Field                                   | Value  |
 | --------------------------------------- | ------ |
@@ -103,7 +103,7 @@ A successful ldapsearch bind will return directory listings for the given base D
 ldap_bind: Invalid credentials (49)
 ```
 
-Manually using the ldapsearch command to repeatedly iterate through the rockyou wordlist is tedious and inefficient, so to aid in this process I created a custom python script (shown below). 
+Manually using the ldapsearch command to repeatedly iterate through the wordlist is tedious and inefficient, so to aid in this process I created a custom python script (shown below). 
 
 ```python
 import subprocess
@@ -141,10 +141,10 @@ And that's it, within a short space of time the password will be guessed (assumi
 ### Detection
 1. Run the brute forcer script from the red teaming exercise
 2. Navigate to Explore/Discover in Wazuh
-3. Add a filter for 'data.win.eventdata.targetUserName: scarab'
+3. Add a filter for `data.win.eventdata.targetUserName: scarab`
 4. Filter for the last hour
 
-After running the ldap_brute_forcer.py script we can see from the logs that there are 9 authentication failures, and one success. This lines up perfectly with the rockyou.txt wordlist, and is showing exactly as expected. Digging into these failed logins further will unveil some key information which describes the failed logins in more detail:
+After running the `ldap_brute_forcer.py` script we can see from the logs that there are 9 authentication failures, and one success. This lines up perfectly with the wordlist used, and is showing exactly as expected. Digging into these failed logins further will unveil some key information which describes the failed logins in more detail:
 
 |Key|Value|
 |---|---|
@@ -153,7 +153,7 @@ After running the ldap_brute_forcer.py script we can see from the logs that ther
 |data.win.eventdata.targetUserName|scarab|
 |data.win.eventdata.ipAddress|192.168.1.236|
 
-This information is important because it describes login failures through the status and substatus codes. It gives information regarding the source IP address of the login failure and the account the logon was attempted for. Status code 0xc000006d is the generic code for a logon failure, stating that the attempted logon is invalid. Microsoft state that "this is either due to a bad username or other authentication information". 0xc000006a is a substatus code for 0xc000006d which elaborates on the authentication failure. This code explains that the value provided as the current password is not correct. One final important bit of information is the logon type. In this case the logon type is 3, which indicates that this is a network logon and not an interactive session.
+This information is important because it describes login failures through the status and substatus codes. It gives information regarding the source IP address of the login failure and the account the logon was attempted for. Status code `0xc000006d` is the generic code for a logon failure, stating that the attempted logon is invalid. Microsoft state that "this is either due to a bad username or other authentication information". `0xc000006a` is a substatus code for `0xc000006d` which elaborates on the authentication failure. This code explains that the value provided as the current password is not correct. One final important bit of information is the logon type. In this case the logon type is 3, which indicates that this is a network logon and not an interactive session.
 
 ![Failed Login](/failed_login.png)
 
@@ -166,7 +166,7 @@ To summarize: Event code 4634 shows that the logon session was terminated and no
 The new found information tells me that in future brute force cases I should be suspicious of failed logins followed by a terminated logon session. This is proven by the event logs generated by the LDAP brute forcer, which has managed to successfully guess password credentials, immediately terminating the logon session upon completion. Information like this is important because it can help differentiate a brute force attempt from a normal successful logon, where the user may have incorrectly entered their password before logging in. Another important indicator to consider for brute force attempts is the timestamp of each event. In this case, the difference in event timestamps are a matter of milliseconds. The frequency of login failures is far too high to be human error and is indicative of a computer-aided operation.
 
 ### Rule Creation
-Now that we've gone through and manually detected the attack, we can grab our key data that we noted at the beginning and start to write some detection rules. These will alert us whenever this type of activity is seen again. In Wazuh, this can be done by navigating to the "Monitors" tab under Explore/Alerting, then clicking "Create monitor". I'll include screenshots of my configurations as we go with little explanations as to why I've made some of my decisions.
+Now that we've gone through and manually detected the attack, we can grab our key data that we noted at the beginning and start to write some detection rules. These will alert us whenever this type of activity is seen again. In Wazuh, this can be done by navigating to the `Monitors` tab under `Explore/Alerting`, then clicking `Create monitor`. I'll include screenshots of my configurations as we go with little explanations as to why I've made some of my decisions.
 
 ![Monitor Details](/monitor_details.png)
 
@@ -189,7 +189,7 @@ And there you go. The rule is setup. You can make an action if you want which wi
 Great. That's the detection rule setup, but what about mitigation?
 
 ### Mitigation
-So MITRE explains that there are 4 ways of mitigating this type of threat: 
+MITRE explains that there are 4 ways of mitigating this type of threat: 
 
 1. Account Use Policies  
 Set account lockout policies after a certain number of failed login attempts to prevent passwords from being guessed. Too strict a policy may create a denial of service condition and render environments un-usable, with all accounts used in the brute force being locked-out. Use conditional access policies to block logins from non-compliant devices or from outside defined organization IP ranges. Consider blocking risky authentication requests, such as those originating from anonymizing services/proxies.
@@ -211,7 +211,7 @@ Given my current constraints I will be enforcing account lockout. There are thre
 2. Changing the password policies would require a password change, requiring modifications to the brute force script. 
 3. Adopting MFA in a local Active Directory environment requires the installation of a third-party client, which is honestly more hassle than its worth for a homelab.
 
-To change the account lockout policy open the Group Policy Management Editor in Windows Server, and navigate to Computer Configuration/Policies/Windows Settings/Security Settings/Account Policies/Account Lockout Policy. I've configured mine to lockout the account for 30 minutes if more than 5 invalid logon attempts are made. The counter will reset after another 30 minutes. 
+To change the account lockout policy open the `Group Policy Management Editor` in Windows Server, and navigate to `Computer Configuration/Policies/Windows Settings/Security Settings/Account Policies/Account Lockout Policy`. I've configured mine to lockout the account for 30 minutes if more than 5 invalid logon attempts are made. The counter will reset after another 30 minutes. 
 
 Now when the script is run it continues running beyond the correct password, never completing because the account gets locked before it can successfully authenticate. When looking at this in Wazuh an event can be found showing that the account was locked out with the [Event ID 4740](https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-10/security/threat-protection/auditing/event-4740).
 
@@ -222,6 +222,6 @@ This event shows that the mitigation was successful, and that this method of bru
 # Conclusion
 Password guessing attacks are relatively easy to perform and is a proven method of gaining unauthorized access to user accounts. Fortunately, this technique is also easy to mitigate and can be done effectively by enforcing stronger policies and MFA. Though it was not discussed in this lab there are other tools which can be used to brute force common network services, but I felt that creating a custom script would be a fun learning experience.
 
-I hope you enjoyed this example of password guessing and that you found value in the content provided. The purpose of this was to be an introductory exercise using readily available services upon setup of an AD server. This is a very basic example of password guessing, but I feel it has effectively showcased this MITRE technique from both perspectives. This was new to me and I had fun building the python script and learning a little bit about LDAP and how the `ldapsearch` tool works. 
+I hope you enjoyed this example of password guessing and that you found value in the content provided. The purpose of this was to be an introductory exercise using readily available services upon setup of an AD server. This is a very basic example of password guessing, but I feel it has effectively showcased this MITRE technique from both perspectives. This was new to me and I had fun building the python script and learning a little bit about LDAP and how the ldapsearch tool works. 
 
 A benefit of this exercise is that we were able to gain experience creating a detection rule, which is active and will alert us in future brute force attempts. If you followed along you should have gained some experience with log analysis when exploring the logs generated during the attacking phase.
