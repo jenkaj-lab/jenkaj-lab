@@ -1,13 +1,25 @@
 ---
-title: Overview
-date: 2025-01-26
+title: LDAP Password Guessing
+date: 2025-04-25
 draft: false
 author: Alex Jenkins
 ---
+
 # Introduction
 - breakdown of the task
 - overview of the three articles inc. config, redteam, blueteam
 - 
+
+config:
+In this exercise I will be targeting LDAP, which is listed as one of the commonly targeted services in the Password Guessing techniques page on the MITRE ATT&CK framework. 
+
+red team:
+In this article we will perform a password guessing attack from the perspective of the adversary. The process begins by using **nmap** to scan the host and determine if the Lightweight Directory Access Protocol (LDAP) port is open. Once the LDAP service has been confirmed, a custom python script will be used to brute force a user's password with **ldapsearch**.
+
+- brute forcing AD with a custom python script
+- detecting password guessing attacks with Wazuh, creating a detection rule, and remediating by implementing mitigation techniques.
+
+blue tea
 
 ## What is Password Guessing?
 
@@ -33,14 +45,7 @@ author: Alex Jenkins
 | Technique     | T1110     | Brute Force       |
 | Sub-Technique | T1110.001 | Password Guessing |
 
----
-title: Configuration
-date: 2025-01-26
-draft: false
-author: Alex Jenkins
----
-## Introduction
-In this exercise I will be targeting LDAP, which is listed as one of the commonly targeted services in the Password Guessing techniques page on the MITRE ATT&CK framework. 
+# Configuration
 ## Assumptions
 1. Active Directory (AD) is installed and running, configured with a Domain Controller (DC).
 2. Kali Linux is running and **connected to the same network** as the AD DC.
@@ -64,14 +69,8 @@ Next, open Active Directory Users and Computers. Locate your domain, right click
 | user must change password at next logon | false  |
 | password never expires                  | true   |
 
----
-title: Brute Forcing Active Directory LDAP using a Custom Python Script
-date: 2025-01-26
-draft: false
-author: Alex Jenkins
----
-## Introduction
-In this article we will perform a password guessing attack from the perspective of the adversary. The process begins by using **nmap** to scan the host and determine if the Lightweight Directory Access Protocol (LDAP) port is open. Once the LDAP service has been confirmed, a custom python script will be used to brute force a user's password with **ldapsearch**.
+
+# Red Team
 
 ## Assumptions
 For this red team exercise, it is assumed that the adversary has performed the initial reconnaissance stage. During that engagement they would have acquired an Active Directory (AD) username, discovered a domain, and located the host's IP address. The next logical step for the adversary is to identify a network entry point.
@@ -166,14 +165,7 @@ And that's it, within a short space of time the password will be guessed (assumi
 
 I hope you enjoyed this example of password guessing and that you found value in the examples and code provided. The purpose of this was to be an introductory exercise using readily available services upon setup of an AD server. This is a very basic example of password guessing, but I feel it has effectively showcased this MITRE technique. This was new to me and I had fun building the python script and learning a little bit about LDAP and how the ldapsearch tool works. 
 
-
-
----
-title: Detecting and Mitigating Active Directory LDAP Password Guessing Attacks with Wazuh
-date: 2025-01-26
-draft: false
-author: Alex Jenkins
----
+# Blue Team
 ## Assumptions
 - Wazuh is configured and listening to AD logs
 
