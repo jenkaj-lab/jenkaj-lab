@@ -14,7 +14,7 @@ author: Alex Jenkins
 In this lab I will be demonstrating the MITRE ATT&CK sub-technique T1110.001: Password Guessing. This involves exploiting Active Directory's (AD) Lightweight Directory Access Protocol (LDAP), harnessing its authentication mechanism to brute force a known user's password. Wazuh is used to analyze the logs generated resulting from both the authentication failures and success post account compromise.
 
 ### Assumptions
-1. Active Directory (AD) is installed and running, configured with a Domain Controller (DC).
+1. AD is installed and running, configured with a Domain Controller (DC).
 2. Kali Linux is running and connected to the same network as the AD DC.
 3. There are no firewall rules that will interfere with connection requests from Kali Linux to your AD server.
 4. Initial reconnaissance has been performed, which led to the discovery of a user, host IP address, and AD Domain.
@@ -146,10 +146,12 @@ And that's it, within a short space of time the password will be guessed (assumi
 
 After running the ldap_brute_forcer.py script we can see from the logs that there are 9 authentication failures, and one success. This lines up perfectly with the rockyou.txt wordlist, and is showing exactly as expected. Digging into these failed logins further will unveil some key information which describes the failed logins in more detail:
 
-> data.win.eventdata.status: 0xc000006d  
-data.win.eventdata.subStatus: 0xc000006a  
-data.win.eventdata.targetUserName: scarab  
-data.win.eventdata.ipAddress: 192.168.1.236  
+|Key|Value|
+|---|---|
+|data.win.eventdata.status|0xc000006d|
+|data.win.eventdata.subStatus|0xc000006a|
+|data.win.eventdata.targetUserName|scarab|
+|data.win.eventdata.ipAddress|192.168.1.236|
 
 This information is important because it describes login failures through the status and substatus codes. It gives information regarding the source IP address of the login failure and the account the logon was attempted for. Status code 0xc000006d is the generic code for a logon failure, stating that the attempted logon is invalid. Microsoft state that "this is either due to a bad username or other authentication information". 0xc000006a is a substatus code for 0xc000006d which elaborates on the authentication failure. This code explains that the value provided as the current password is not correct. One final important bit of information is the logon type. In this case the logon type is 3, which indicates that this is a network logon and not an interactive session.
 
