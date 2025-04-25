@@ -4,54 +4,33 @@ date: 2025-04-25
 draft: false
 author: Alex Jenkins
 ---
-
-# Introduction
-- breakdown of the task
-- overview of the three articles inc. config, redteam, blueteam
-- 
-
-config:
-In this exercise I will be targeting LDAP, which is listed as one of the commonly targeted services in the Password Guessing techniques page on the MITRE ATT&CK framework. 
-
-red team:
-In this article we will perform a password guessing attack from the perspective of the adversary. The process begins by using **nmap** to scan the host and determine if the Lightweight Directory Access Protocol (LDAP) port is open. Once the LDAP service has been confirmed, a custom python script will be used to brute force a user's password with **ldapsearch**.
-
-- brute forcing AD with a custom python script
-- detecting password guessing attacks with Wazuh, creating a detection rule, and remediating by implementing mitigation techniques.
-
-blue tea
-
-## What is Password Guessing?
-
-## What is LDAP?
-
-
-
-- overview of the three different articles including
-- config
-- red team
-- blue team
-- what the users are about to read
-- what we will be doing (brute forcing LDAP)
-- what is LDAP
----
-
-## MITRE ATT&CK Mapping
-*** move to the top of the page
-
+# MITRE ATT&CK Mapping
 | Category      | ID        | Description       |
 | ------------- | --------- | ----------------- |
 | Tactic        | TA0006    | Credential Access |
 | Technique     | T1110     | Brute Force       |
 | Sub-Technique | T1110.001 | Password Guessing |
 
-# Configuration
+# Introduction
+In this lab I will be demonstrating the MITRE ATT&CK sub-technique T1110.001: Password Guessing. This involves exploiting Active Directory's (AD) Lightweight Directory Access Protocol (LDAP), harnessing its authentication mechanism to brute force a known user's password. Wazuh is used to analyze the logs generated resulting from both the authentication failures and success post account compromise.
+
 ## Assumptions
 1. Active Directory (AD) is installed and running, configured with a Domain Controller (DC).
-2. Kali Linux is running and **connected to the same network** as the AD DC.
+2. Kali Linux is running and connected to the same network as the AD DC.
 3. There are no firewall rules that will interfere with connection requests from Kali Linux to your AD server.
+4. Initial reconnaissance has been performed, which led to the discovery of a user, host IP address, and AD Domain.
+5. Wazuh is configured and listening to AD logs
+
+# Background
+## What is Password Guessing?
+[MITRE](https://attack.mitre.org/techniques/T1110/001/) describes password guessing as a technique whereby "adversaries with no prior knowledge of legitimate credentials within the system or environment may guess passwords to attempt access to accounts", and that "without knowledge of the password for an account, an adversary may opt to systematically guess the password using a repetitive or iterative mechanism".
+
+## What is LDAP?
+LDAP is a communication protocol designed for accessing directory services. It is a cross-platform protocol, which means it is not exclusive to Microsoft's AD, but is a core component of the directory service. It enables authentication for directory services, which is where confidential user and computer account information is stored e.g. usernames and passwords. In simpler terms, LDAP is a way of talking with and retrieving information from AD. Please note that because this lab is based heavily around the combined usage of AD and LDAP, it is assumed that all LDAP references pertain to AD.
+
+# Configuration
 ## Modify Password Policies
-The very first step to this exercise is ensuring a user has been created. It may be necessary to change the default password policy in your AD server to ensure that a vulnerable password may be used. To do that open Group Policy Management Editor, navigate to *Computer Configuration/Policies/Windows Settings/Security Settings/Account Policies/Password Policy* and set the minimum password length to a low value - I've used a length of five. I also took the liberty of disabling the *Password must meet complexity requirements* policy. 
+The first step to this exercise is to ensure a user is created. It may be necessary to change the default password policy in your AD server to ensure that a vulnerable password may be used. To do that open Group Policy Management Editor, navigate to Computer Configuration/Policies/Windows Settings/Security Settings/Account Policies/Password Policy and set the minimum password length to a low value - I've used a length of five. I also took the liberty of disabling the "Password must meet complexity requirements" policy. 
 
 | Policy                                     | Setting      |
 | ------------------------------------------ | ------------ |
@@ -71,10 +50,6 @@ Next, open Active Directory Users and Computers. Locate your domain, right click
 
 
 # Red Team
-
-## Assumptions
-For this red team exercise, it is assumed that the adversary has performed the initial reconnaissance stage. During that engagement they would have acquired an Active Directory (AD) username, discovered a domain, and located the host's IP address. The next logical step for the adversary is to identify a network entry point.
-
 ## LDAP Discovery
 As discussed, the tool used to discover the LDAP port status will be nmap. Efforts have been made to ensure the nmap scan does not create too much noise - only scanning the relevant port and address, and revoking ICMP scans. A full example of the scan used during this engagement, including my specific output, and a description of each command is shown below:
 
@@ -163,12 +138,7 @@ Essentially all this python script does is use subprocess to run the ldapsearch 
 
 And that's it, within a short space of time the password will be guessed (assuming it exists in the chosen wordlist). The weak password policy and lack of lockout mechanisms make this a trivial exercise, allowing limitless attempts to authenticate into the user despite an array of failed logins.
 
-I hope you enjoyed this example of password guessing and that you found value in the examples and code provided. The purpose of this was to be an introductory exercise using readily available services upon setup of an AD server. This is a very basic example of password guessing, but I feel it has effectively showcased this MITRE technique. This was new to me and I had fun building the python script and learning a little bit about LDAP and how the ldapsearch tool works. 
-
 # Blue Team
-## Assumptions
-- Wazuh is configured and listening to AD logs
-
 ## Detection
 1. Run the brute forcer script from the red teaming exercise
 2. Navigate to Explore/Discover in Wazuh
@@ -247,5 +217,11 @@ Now when the script is run it continues running beyond the correct password, nev
 ![Account Lockout](/account_lockout.png)
 
 This event shows that the mitigation was successful, and that this method of brute force no longer works. Obviously this has limitations, and the attacker could still have gained access if they guessed correctly within the first 4 attempts, but with stronger password policies the likelihood of guessing this correctly is very low. If you wish to adopt stronger password policies I recommend following the most up-to-date [NIST Guidelines](https://pages.nist.gov/800-63-4/sp800-63b.html) to understand what makes a strong password, as this is subject to change.
+
+# Conclusion
+
+Conclusion: Summarize key takeaways and suggest further reading or next steps.
+
+I hope you enjoyed this example of password guessing and that you found value in the examples and code provided. The purpose of this was to be an introductory exercise using readily available services upon setup of an AD server. This is a very basic example of password guessing, but I feel it has effectively showcased this MITRE technique. This was new to me and I had fun building the python script and learning a little bit about LDAP and how the ldapsearch tool works. 
 
 I hope you found value in this blue team exercise. It was a rather trivial example, again showcasing a basic technique for gaining a foothold into an account or network. Nevertheless it was good for me to practice and I hope you followed along and learned something too.
