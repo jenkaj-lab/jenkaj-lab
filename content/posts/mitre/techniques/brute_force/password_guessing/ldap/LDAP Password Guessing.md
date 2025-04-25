@@ -4,7 +4,6 @@ date: 2025-04-25
 draft: false
 author: Alex Jenkins
 ---
-# MITRE ATT&CK Mapping
 | Category      | ID        | Description       |
 | ------------- | --------- | ----------------- |
 | Tactic        | TA0006    | Credential Access |
@@ -14,7 +13,7 @@ author: Alex Jenkins
 # Introduction
 In this lab I will be demonstrating the MITRE ATT&CK sub-technique T1110.001: Password Guessing. This involves exploiting Active Directory's (AD) Lightweight Directory Access Protocol (LDAP), harnessing its authentication mechanism to brute force a known user's password. Wazuh is used to analyze the logs generated resulting from both the authentication failures and success post account compromise.
 
-## Assumptions
+### Assumptions
 1. Active Directory (AD) is installed and running, configured with a Domain Controller (DC).
 2. Kali Linux is running and connected to the same network as the AD DC.
 3. There are no firewall rules that will interfere with connection requests from Kali Linux to your AD server.
@@ -22,14 +21,14 @@ In this lab I will be demonstrating the MITRE ATT&CK sub-technique T1110.001: Pa
 5. Wazuh is configured and listening to AD logs
 
 # Background
-## What is Password Guessing?
+### What is Password Guessing?
 [MITRE](https://attack.mitre.org/techniques/T1110/001/) describes password guessing as a technique whereby "adversaries with no prior knowledge of legitimate credentials within the system or environment may guess passwords to attempt access to accounts", and that "without knowledge of the password for an account, an adversary may opt to systematically guess the password using a repetitive or iterative mechanism".
 
-## What is LDAP?
+### What is LDAP?
 LDAP is a communication protocol designed for accessing directory services. It is a cross-platform protocol, which means it is not exclusive to Microsoft's AD, but is a core component of the directory service. It enables authentication for directory services, which is where confidential user and computer account information is stored e.g. usernames and passwords. In simpler terms, LDAP is a way of talking with and retrieving information from AD. Please note that because this lab is based heavily around the combined usage of AD and LDAP, it is assumed that all LDAP references pertain to AD.
 
 # Configuration
-## Modify Password Policies
+### Modify Password Policies
 The first step to this exercise is to ensure a user is created. It may be necessary to change the default password policy in your AD server to ensure that a vulnerable password may be used. To do that open Group Policy Management Editor, navigate to Computer Configuration/Policies/Windows Settings/Security Settings/Account Policies/Password Policy and set the minimum password length to a low value - I've used a length of five. I also took the liberty of disabling the "Password must meet complexity requirements" policy. 
 
 | Policy                                     | Setting      |
@@ -37,7 +36,7 @@ The first step to this exercise is to ensure a user is created. It may be necess
 | minimum password length                    | 5 characters |
 | password must meet complexity requirements | disabled     |
 
-## Create a new user
+### Create a new user
 Next, open Active Directory Users and Computers. Locate your domain, right click the *Users* folder, and create a new user. For this exercise I'm going to be using a password from the rockyou wordlist, which is readily available in Kali Linux in */usr/share/wordlists* and just need to be extracted. You can do that with the *gunzip* command. I decided to use the 10th password in this list to simplify testing of blue team's patches. Once you've picked a password fill in the user details, uncheck "User must change password at next logon", and check "Password never expires". It should go without saying that in production environments this is not an ideal setup, but is much more convenient for our use-case. If you want to follow along, these are the credentials I used:
 
 | Field                                   | Value  |
@@ -50,7 +49,7 @@ Next, open Active Directory Users and Computers. Locate your domain, right click
 
 
 # Red Team
-## LDAP Discovery
+### LDAP Discovery
 As discussed, the tool used to discover the LDAP port status will be nmap. Efforts have been made to ensure the nmap scan does not create too much noise - only scanning the relevant port and address, and revoking ICMP scans. A full example of the scan used during this engagement, including my specific output, and a description of each command is shown below:
 
 **Input**
@@ -82,7 +81,7 @@ Nmap done: 1 IP address (1 host up) scanned in 0.12 seconds
 
 nmap's output shows that the LDAP port is indeed open on its standard port of 389, which means that it is reachable and we can begin our attack.
 
-## Brute Force
+### Brute Force
 I've decided to use the ldapsearch tool for this attack. This tool is used to open a connection to an LDAP server, bind (or authenticate into the directory server), and perform a search query based on the input. We are interested specifically in **bind** in this case, because a successful authentication will indicate a correctly guessed password.
 
 Let's first go over the ldapsearch command. The following is the exact command I need to use in my environment to login to the scarab user:
@@ -139,7 +138,7 @@ Essentially all this python script does is use subprocess to run the ldapsearch 
 And that's it, within a short space of time the password will be guessed (assuming it exists in the chosen wordlist). The weak password policy and lack of lockout mechanisms make this a trivial exercise, allowing limitless attempts to authenticate into the user despite an array of failed logins.
 
 # Blue Team
-## Detection
+### Detection
 1. Run the brute forcer script from the red teaming exercise
 2. Navigate to Explore/Discover in Wazuh
 3. Add a filter for 'data.win.eventdata.targetUserName: scarab'
@@ -187,7 +186,7 @@ And there you go. The rule is setup. You can make an action if you want which wi
 
 Great. That's the detection rule setup, but what about mitigation?
 
-## Mitigation
+### Mitigation
 So MITRE explains that there are 4 ways of mitigating this type of threat: 
 
 1. Account Use Policies  
