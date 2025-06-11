@@ -189,9 +189,9 @@ with open(dns_log_file, "r") as file:
         time.sleep(1)
 ```
 
-The program above is designed to listen to the DNS log file for any updates, refreshing every second. I've named it dns_listener.py. You should notice that this is a very basic example and isn't very fault-tolerant. It will quickly strip out the query within the DNS record, split that query into sections by periods, and decode those sections if they don't match one of two keywords; homelab and local. Make sure to adapt those keywords to fit your setup if you're following along or you will have errors.
+The program above is designed to listen to the DNS log file for any updates, refreshing every second. I've named it `dns_listener.py`. You may have noticed that this is a very basic example and isn't very fault-tolerant. It will quickly strip out the query within the DNS record, split that query into sections by periods, and decode those sections if they don't match one of two keywords; homelab and local. Make sure to adapt those keywords to fit your setup if you're following along or you will have errors. A more robust approach would be to verify whether each section is actually base64-encoded rather than excluding specific keywords. However, this works perfectly fine for this lab exercise.
 
-The malware on the infected machine will gather user and system information relevant to your setup. That said, if all steps were followed correctly, the listener should have successfully decoded the DNS query and will output the infected machine's details. Example output from my machine:
+It's important to note that the malware on your infected machine will gather user and system information which will be different from mine, meaning the next example output will look wildly different depending on your chosen username and OS. That said, if all steps were followed correctly, the listener will have successfully decoded the DNS query and output the infected machine's details in plaintext. Example output as follows:
 ```
 alex@c2-server:~$ python3 dns_listener.py 
 alex 6.14.10-arch1-1
