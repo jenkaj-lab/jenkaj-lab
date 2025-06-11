@@ -2,7 +2,7 @@
 Title: Disclaimer
 Author: Alex Jenkins
 ---
-Disclaimer The content provided on this blog is strictly for educational and research purposes only. The techniques, configurations, and code samples discussed here are intended to help security professionals, ethical hackers, and SOC analysts understand and defend against cybersecurity threats.
+The content provided on this blog is strictly for educational and research purposes only. The techniques, configurations, and code samples discussed here are intended to help security professionals, ethical hackers, and security analysts understand and defend against cybersecurity threats.
 
 Unauthorized use of this information for illegal, unethical, or malicious activities is strictly prohibited. Readers are responsible for ensuring that they comply with all applicable laws and guidelines when testing security techniques.
 
