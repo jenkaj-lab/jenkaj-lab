@@ -8,7 +8,7 @@ author: Alex Jenkins
 | ------------- | --------- | ----------------- |
 | Tactic        | TA011     | Command and Control |
 | Technique     | T1071     | Application Layer Protocol  |
-| Sub-Technique | T1071.004 | DNS |
+| Sub-Technique | T1071.004 | Application Layer Protocol: DNS |
 # Configuration
 ## Server
 1. Setup Ubuntu server - I'm using 24.04.2
