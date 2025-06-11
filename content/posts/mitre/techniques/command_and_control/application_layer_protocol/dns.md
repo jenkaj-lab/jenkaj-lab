@@ -1,3 +1,14 @@
+---
+title: DNS
+date: 2025-06-11
+draft: false
+author: Alex Jenkins
+---
+| Category      | ID        | Description       |
+| ------------- | --------- | ----------------- |
+| Tactic        | TA011     | Command and Control |
+| Technique     | T1071     | Application Layer Protocol  |
+| Sub-Technique | T1071.004 | DNS |
 # Configuration
 ## Server
 1. Setup Ubuntu server - I'm using 24.04.2
