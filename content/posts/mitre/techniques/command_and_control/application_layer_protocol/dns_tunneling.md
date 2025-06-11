@@ -18,7 +18,7 @@ First of all, make sure you download bind9 and dnsutils. bind9 is what we will b
 sudo apt-get install bind9 dnsutils
 ```
 
-I will be covering all the steps required to get this up and running, but I would encourage you to read (Ubuntu's Tutorial)[https://documentation.ubuntu.com/server/how-to/networking/install-dns/index.html] on setting up a DNS server, which will be much more in-depth than what is included in this post.
+I will be covering all the steps required to get this up and running, but I would encourage you to read [Ubuntu's Tutorial](https://documentation.ubuntu.com/server/how-to/networking/install-dns/index.html) on setting up a DNS server, which will be much more in-depth than what is included in this post. It's also a very good place to start if you're a beginner and have never setup a DNS server before.
 
 **Forward Lookup Zone**
 First modify the /etc/bind/named.conf.local file to include your forward lookup zone file and domain. Mind looks like:
