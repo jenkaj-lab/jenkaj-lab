@@ -20,7 +20,7 @@ sudo apt-get install bind9 dnsutils
 
 I will be covering all the steps required to get this up and running, but I would encourage you to read [Ubuntu's Tutorial](https://documentation.ubuntu.com/server/how-to/networking/install-dns/index.html) on setting up a DNS server because it's much more comprehensive than mine. It's also a very good place to start if you're a beginner and have never setup a DNS server before.
 
-To setup the forward lookup zone you need to modify **/etc/bind/named.conf.local**. You'll change this to use whatever FQDN you want, I've gone with the very creative homelab.local, then list it as type master and point it to your new file. This tells BIND9 where to look for your forward zone configurations.
+To setup the forward lookup zone you need to modify `/etc/bind/named.conf.local`. You'll change this to use whatever FQDN you want, I've gone with the very creative homelab.local, then list it as type master and point it to your new file. This tells BIND9 where to look for your forward zone configurations.
 ```
 zone "homelab.local" {
   type master;
@@ -28,7 +28,7 @@ zone "homelab.local" {
 };
 ```
 
-The next logical step should then be to make the fowards zone file. To do that just copy an existing zone file as a template for editing, matching the file path you used in **named.conf.local**.
+The next logical step should then be to make the fowards zone file. To do that just copy an existing zone file as a template for editing, matching the file path you used in `named.conf.local`.
 ```
 sudo cp /etc/bind/db.local /etc/bind/db.homelab.local
 ```
@@ -51,7 +51,7 @@ $TTL    604800
 @       IN      A       192.168.1.155      
 ```
 
-That's all you need to do to make a working DNS, but we need to go one step further and enable logging. Enabling logs will allow us to capture queries from the infected machine and save them for processing. This file doesn't have any system-specific content so feel free to just copy and paste it if you want. Make these changes to **/etc/bind/named.conf**.
+That's all you need to do to make a working DNS, but we need to go one step further and enable logging. Enabling logs will allow us to capture queries from the infected machine and save them for processing. This file doesn't have any system-specific content so feel free to just copy and paste it if you want. Make these changes to `/etc/bind/named.conf`.
 ```
 include "/etc/bind/named.conf.options";
 include "/etc/bind/named.conf.local";
@@ -65,7 +65,7 @@ logging {
 };
 ```
 
-Sweet. Just the final touches now. Run these commands to make the new directory for the logs to live in, change the ownership to bind (the user which the _named daemon_ runs as), restart the service to apply any changes, and start listening for logs.
+Sweet. Just the final touches now. Run these commands to make the new directory for the logs to live in, change the ownership to bind (the user which the **named daemon** runs as), restart the service to apply any changes, and start listening for logs.
 ```
 sudo mkdir /var/log/named
 sudo chown bind:bind /var/log/named
@@ -73,7 +73,7 @@ sudo systemctl restart bind9
 sudo tail -f /var/log/named/query.log
 ```
 
-Now test it on another machine with nslookup and you should see some acitivity in the log file.
+Now test it on another machine with **nslookup** and you should see some acitivity in the log file. I've included snippets of output for both the client and server below:
 ```
 Client
 ---
@@ -93,7 +93,7 @@ client @0x77042c1ca578 192.168.1.182#35547 (homelab.local): query: homelab.local
 ```
 
 ### Infected Machine
-On infected machine modify /etc/resolv.conf to include:
+On the infected machine modify `/etc/resolv.conf` to include:
 ```
 nameserver 192.168.1.155 # Change this to the IP of your DNS server
 ```
