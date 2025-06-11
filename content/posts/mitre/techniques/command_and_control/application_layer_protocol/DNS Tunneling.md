@@ -83,7 +83,7 @@ sudo systemctl restart bind9
 sudo tail -f /var/log/named/query.log
 ```
 
-On a separate machine, use the nslookup tool from the dnsutils suite to query your newly configured domain and verify functionality. Feel free to use the infected machine for this, just make sure it's configured to use your new DNS (see the next section to learn how to do this). There's a snippet of both the command I used and the output below. If you've followed the steps correctly you will see the domain name and its resolved IP address.
+On a separate machine, use the `nslookup` tool from the `dnsutils` suite to query your newly configured domain and verify functionality. Feel free to use the infected machine for this, just make sure it's configured to use your new DNS (see the next section to learn how to do this). There's a snippet of both the command I used and the output below. If you've followed the steps correctly you will see the domain name and its resolved IP address.
 
 ```
 [alex@extarch c2-projects]$ nslookup homelab.local
@@ -112,7 +112,7 @@ With configuration finished the red team engagement can commence. For this part 
 
 I've named this malware `dns_tunneling.py` and its sole purpose is to extract information from the infected machine and exfiltrate it over DNS to the C2 server. That might sound complicated, but it's quite easy when you break it down into steps:
 
-1. Collect the data using built-in linux commands via subprocess
+1. Collect the data using built-in linux commands via `subprocess`
 2. Encode it with base64 for seamless transportation
 3. Clean the data and strip unnecessary characters
 4. Query the C2 DNS server with the encoded data
@@ -189,7 +189,7 @@ with open(dns_log_file, "r") as file:
         time.sleep(1)
 ```
 
-The program above is designed to listen to the DNS log file for any updates, refreshing every second. I've named it `dns_listener.py`. You may have noticed that this is a very basic example and isn't very fault-tolerant. It will quickly strip out the query within the DNS record, split that query into sections by periods, and decode those sections if they don't match one of two keywords; homelab and local. Make sure to adapt those keywords to fit your setup if you're following along or you will have errors. A more robust approach would be to verify whether each section is actually base64-encoded rather than excluding specific keywords. However, this works perfectly fine for this lab exercise.
+`dns_listener.py` is designed to listen to the DNS log file for any updates, refreshing every second. You may have noticed that this is a very basic example and isn't very fault-tolerant. It will quickly strip out the query within the DNS record, split that query into sections by periods, and decode those sections if they don't match one of two keywords; homelab and local. Make sure to adapt those keywords to fit your setup if you're following along or you will have errors. A more robust approach would be to verify whether each section is actually base64-encoded rather than excluding specific keywords. However, this works perfectly fine for this lab exercise.
 
 It's important to note that the malware on your infected machine will gather user and system information which will be different from mine, meaning the next example output will look wildly different depending on your chosen username and OS. That said, if all steps were followed correctly, the listener will have successfully decoded the DNS query and output the infected machine's details in plaintext. Example output as follows:
 ```
