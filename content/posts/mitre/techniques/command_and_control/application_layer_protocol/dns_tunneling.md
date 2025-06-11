@@ -1,5 +1,5 @@
 ---
-title: DNS
+title: DNS Tunneling
 date: 2025-06-11
 draft: false
 author: Alex Jenkins
