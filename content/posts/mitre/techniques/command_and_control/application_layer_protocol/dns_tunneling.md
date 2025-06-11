@@ -102,7 +102,6 @@ Now that we've confirmed that works it's time to make a python script on the ser
 import re
 import time
 import base64
-from datetime import datetime
 
 dns_log_file = "/var/log/named/query.log"
 
