@@ -12,7 +12,7 @@ author: Alex Jenkins
 # Configuration
 For this configuration I am using Ubuntu Server 24.04.2 LTS for my C2 server and Arch Linux for the infected machine. You don't need to use Arch for your host, you can use whatever Linux OS you want. Ubuntu Server is recommended because it's what I've used for this lab and it has nice easy-to-use DNS software ready to install from the package repository. Go ahead and set those two machines up then continue reading for the DNS config.
 
-### Domain Name System
+### Server
 First of all, make sure you download bind9 and dnsutils. bind9 is what we will be using as the name server, and dnsutils gives us some common DNS troubleshooting tools like nslookup. Install these with the following command:
 ```
 sudo apt-get install bind9 dnsutils
@@ -92,7 +92,7 @@ client @0x77042c1ca578 192.168.1.182#36083 (homelab.local): query: homelab.local
 client @0x77042c1ca578 192.168.1.182#35547 (homelab.local): query: homelab.local IN AAAA + (192.168.1.155)
 ```
 
-## Infected Machine
+### Infected Machine
 On infected machine modify /etc/resolv.conf to include:
 ```
 nameserver 192.168.1.155 # Change this to the IP of your DNS server
