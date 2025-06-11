@@ -193,7 +193,7 @@ with open(dns_log_file, "r") as file:
 
 `dns_listener.py` is designed to listen to the DNS log file for any updates, refreshing every second. You may have noticed that this is a very basic example and isn't very fault-tolerant. It will quickly strip out the query within the DNS record, split that query into sections by periods, and decode those sections if they don't match one of two keywords; homelab and local. Make sure to adapt those keywords to fit your setup if you're following along or you will have errors. A more robust approach would be to verify whether each section is actually base64-encoded rather than excluding specific keywords. However, this works perfectly fine for this lab exercise.
 
-It's important to note that the malware on your infected machine will gather user and system information which will be different from mine, meaning my example output will look much different to yours because you've likely chosen a different username and operating system. That said, if all steps were followed correctly, the listener will have successfully decoded the DNS query and output the infected machine's details in plaintext:
+It's important to note that the malware on your infected machine will gather user and system information which will be different from mine. In other words, my example output will look much different to yours because you will have chosen your own username and operating system. That said, if all steps were followed correctly, the listener will have successfully decoded the DNS query and output the infected machine's details in plaintext:
 ```
 alex@c2-server:~$ python3 dns_listener.py 
 alex 6.14.10-arch1-1
