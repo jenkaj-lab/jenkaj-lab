@@ -65,7 +65,7 @@ logging {
 };
 ```
 
-Sweet. Just the final touches now. Run these commands to make the new directory for the logs to live in, change the ownership to bind (the user which the named daemon runs as), restart the service to apply any changes, and start listening for logs.
+Sweet. Just the final touches now. Run these commands to make the new directory for the logs to live in, change the ownership to bind (the user which the _named daemon_ runs as), restart the service to apply any changes, and start listening for logs.
 ```
 sudo mkdir /var/log/named
 sudo chown bind:bind /var/log/named
