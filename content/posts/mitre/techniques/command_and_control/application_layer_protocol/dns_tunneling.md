@@ -98,4 +98,32 @@ client @0x77042c1ca578 192.168.1.182#55499 (YWxleAo=.Ni4xNC4xMC1hcmNoMS0xCg==.ho
 ```
 
 Now that we've confirmed that works it's time to make a python script on the server to strip out the query and decode it.
-(other python script)
+``` python
+import re
+import time
+import base64
+from datetime import datetime
+
+dns_log_file = "/var/log/named/query.log"
+
+with open(dns_log_file, "r") as file:
+    file.seek(0,2) # move to end of file
+    while True:
+        message = []
+        line = file.readline()
+        if line:
+            line = line.strip()
+            match = re.search(r'query: ([^\s]+)', line)
+            if match:
+                query = match.group(1)
+                split_query = query.split('.')
+                for section in split_query:
+                    if section == "homelab" or section == "local":
+                        pass
+                    else:
+                        decoded_section = base64.b64decode(section).decode("utf-8").strip()
+                        message.append(decoded_section)
+        if message:
+            print(" ".join(message))
+        time.sleep(1)
+```
