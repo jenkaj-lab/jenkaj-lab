@@ -4,17 +4,18 @@ date: 2025-06-11
 draft: false
 author: Alex Jenkins
 ---
+> This is for educational purposes only. Using these techniques outside of controlled environments may violate policy or law.
+
 | Category      | ID        | Description       |
 | ------------- | --------- | ----------------- |
 | Tactic        | TA011     | Command and Control |
 | Technique     | T1071     | Application Layer Protocol  |
 | Sub-Technique | T1071.004 | Application Layer Protocol: DNS |
+
 # Introduction
-The Domain Name System (DNS) is a common Application Layer protocol that communicates over port 53. Many organisations will allow traffic over this protocol because it is essential for translating domain named into IP addresses. Adversaries may use this to their advantage and communicate with their Command and Control (C2) servers over this commonly-used protocol, blending in with normal traffic.  
+The Domain Name System (DNS) is a common Application Layer protocol that communicates over port 53. Many organisations will allow traffic over this protocol because it is essential for translating domain names into IP addresses. Adversaries may use this to their advantage and communicate with their Command and Control (C2) servers over this commonly-used protocol, blending in with normal traffic.  
 
-In today's lab I will be demonstrating my own take on this issue, showcasing one way in which an adversary may exfiltrate data using DNS queries. It begins by explaining how to configure both the infected machine and DNS server, complete with scripts used during red team engagements to both encode and transmit data, and a blue team investigation with detection and remediation strategies.
-
-* Please note that this is for educational purposes only. Using these techniques outside of controlled environments may violate policy or law.
+In today's lab I will be demonstrating my own take on this issue, showcasing one way in which an adversary may exfiltrate data using DNS queries. It walks through the configuration of an infected machine and a DNS server, and includes scripts that demonstrate how red teamers might encode and transmit data. The lab concludes with a blue team investigation into detection and remediation strategies.
 
 # Configuration
 For this configuration I am using Ubuntu Server 24.04.2 LTS for my C2 server and Arch Linux for the infected machine. You don't need to use Arch for your host, you can use whatever Linux OS you want. Ubuntu Server is recommended because it's what I've used for this lab and it has nice easy-to-use DNS software ready to install from the package repository. Go ahead and set those two machines up then continue reading.
