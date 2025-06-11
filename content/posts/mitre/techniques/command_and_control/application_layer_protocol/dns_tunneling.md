@@ -164,3 +164,5 @@ The malware on the infected machine will gather user and system information rele
 alex@c2-server:~$ python3 dns_listener.py 
 alex 6.14.10-arch1-1
 ```
+
+With that you've had a basic example of how a threat actor might exfiltrate data via the DNS protocol. The example I've given is the first step of communication, where the server has now received information which it can use to identify the infected machine. In future communications the infected machine could prefix messages with this information so that the C2 server may recognise the source of the data.
