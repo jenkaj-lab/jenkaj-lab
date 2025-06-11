@@ -96,3 +96,6 @@ When running the script you should get output like below:
 ```
 client @0x77042c1ca578 192.168.1.182#55499 (YWxleAo=.Ni4xNC4xMC1hcmNoMS0xCg==.homelab.local): query: YWxleAo=.Ni4xNC4xMC1hcmNoMS0xCg==.homelab.local IN TXT +E(0) (192.168.1.155)
 ```
+
+Now that we've confirmed that works it's time to make a python script on the server to strip out the query and decode it.
+(other python script)
