@@ -4,3 +4,13 @@ languageCode = 'en-gb'
 title = 'My MITRE ATT&CK Journey'
 theme = 'maverick'
 paginate = 20
+
+[menus]
+  [[menus.main]]
+    name = 'Posts'
+    pageRef = '/'
+    weight = 10
+  [[menus.main]]
+    name = 'Disclaimer'
+    pageRef = '/disclaimer'
+    weight = 20
