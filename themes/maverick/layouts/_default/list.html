@@ -9,7 +9,7 @@
     <section>
       {{ .Content }}
       <ul reversed class="list">
-        {{ range .Pages }}
+        {{ range where .Pages "Section" "posts" }}
           <li>
             <a class="link" href="{{ .Permalink }}" title="{{ .Title }}">{{ .Title }}
             </a>
