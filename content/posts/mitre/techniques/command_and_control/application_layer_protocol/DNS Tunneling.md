@@ -9,8 +9,8 @@ author: Alex Jenkins
 | Category      | ID        | Description       |
 | ------------- | --------- | ----------------- |
 | Tactic        | TA0011     | Command and Control |
-| Technique     | T1071     | Application Layer Protocol  |
-| Sub-Technique | T1071.004 | Application Layer Protocol: DNS |
+| Techniques     | T1071, T1132     | Application Layer Protocol, Data Encoding  |
+| Sub-Techniques | T1071.004, T1132.001 | DNS, Standard Encoding |
 
 # Introduction
 The Domain Name System (DNS) is a common Application Layer protocol that communicates over port 53. Many organisations will allow traffic over this protocol because it is essential for translating domain names into IP addresses. Adversaries may use this to their advantage and communicate with their Command and Control (C2) servers over this commonly-used protocol, blending in with normal traffic.  
