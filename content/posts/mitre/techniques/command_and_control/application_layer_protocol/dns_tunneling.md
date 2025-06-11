@@ -74,9 +74,9 @@ sudo tail -f /var/log/named/query.log
 ```
 
 Now test it on another machine with nslookup and you should see some acitivity in the log file.
-
-**Client**
 ```
+Client
+---
 [alex@extarch c2-projects]$ nslookup homelab.local
 Server:		192.168.1.155
 Address:	192.168.1.155#53
@@ -85,8 +85,9 @@ Name:	homelab.local
 Address: 192.168.1.155
 ```
 
-**Server**
 ```
+Server
+---
 client @0x77042c1ca578 192.168.1.182#36083 (homelab.local): query: homelab.local IN A + (192.168.1.155)
 client @0x77042c1ca578 192.168.1.182#35547 (homelab.local): query: homelab.local IN AAAA + (192.168.1.155)
 ```
