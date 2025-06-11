@@ -20,7 +20,7 @@ In today's lab I will be demonstrating my own take on this issue, showcasing one
 Though the main technique explored in this lab is T1081.004, there is a slight crossover with T1132.001. This is because domain queries made over the DNS protocol can fail if any obscure characters exist, therefore all exfiltrated data from the infected machine is encoded with base64 first. This isn't a direct demonstration of the technique itself, but rather a necessary caveat of my chosen extraction method. The infected machine in this case refers to the host machine which contains malware responsible for extracting information and sending it to the Command and Control server over DNS.
 
 # Configuration
-For this configuration I am using Ubuntu Server 24.04.2 LTS for my C2 server and Arch Linux for the infected machine. You don't need to use Arch for your host, you can use whatever Linux OS you want. Ubuntu Server is recommended because it's what I've used for this lab and it has nice easy-to-use DNS software ready to install from the package repository. Go ahead and set those two machines up then continue reading.
+For this configuration I am using Ubuntu Server 24.04.2 LTS for my C2 server and Arch Linux for the infected machine. You don't need to use Arch for your infected machine, you can use whatever Linux OS you want. I recommend Ubuntu Server for the C2 machine because it offers easy-to-install DNS software from the package repository. Go ahead and set those two machines up then continue with the server config.
 
 ### Server
 First of all, make sure you download bind9 and dnsutils. bind9 is what we will be using as the name server, and dnsutils gives us some common DNS troubleshooting tools like nslookup. Install these with the following command:
@@ -38,7 +38,7 @@ zone "homelab.local" {
 };
 ```
 
-The next logical step should then be to make the fowards zone file. To do that just copy an existing zone file as a template for editing, matching the file path you used in `named.conf.local`.
+The next logical step should then be to make the forwards zone file. To do that just copy an existing zone file as a template for editing, matching the file path you used in `named.conf.local`.
 ```
 sudo cp /etc/bind/db.local /etc/bind/db.homelab.local
 ```
@@ -75,7 +75,7 @@ logging {
 };
 ```
 
-Sweet. Just the final touches now. Run these commands to make the new directory for the logs to live in, change the ownership to bind (the user which the **named daemon** runs as), restart the service to apply any changes, and start listening for logs.
+Now, let's finish setting up the logging system and restart services to apply changes. Run these commands to make the new directory for the logs to live in, change the ownership to bind (the user which the _named daemon_ runs as), restart the service to apply any changes, and start listening for logs.
 ```
 sudo mkdir /var/log/named
 sudo chown bind:bind /var/log/named
@@ -83,7 +83,7 @@ sudo systemctl restart bind9
 sudo tail -f /var/log/named/query.log
 ```
 
-Now test it on another machine with **nslookup** and you should see some acitivity in the log file. I've included snippets of output for both the client and server below:
+Now test it on another machine with nslookup and you should see some acitivity in the log file. I've included snippets of output for both the client and server below:
 ```
 Client
 ---
