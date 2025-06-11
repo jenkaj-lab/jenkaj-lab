@@ -10,7 +10,7 @@ author: Alex Jenkins
 | Technique     | T1071     | Application Layer Protocol  |
 | Sub-Technique | T1071.004 | Application Layer Protocol: DNS |
 # Introduction
-The Domain Name System (DNS) is a common Application Layer protocol that communicates over port 53. Many organisations will allow traffic over this protocol because it is essential for translating domain named into IP addresses. Adversaries may use this to their advantage and communicate with their Command and Control (C2) servers over this commonly-used protocol, blending in with normal traffic - AKA DNS tunneling.  
+The Domain Name System (DNS) is a common Application Layer protocol that communicates over port 53. Many organisations will allow traffic over this protocol because it is essential for translating domain named into IP addresses. Adversaries may use this to their advantage and communicate with their Command and Control (C2) servers over this commonly-used protocol, blending in with normal traffic.  
 
 In today's lab I will be demonstrating my own take on this issue, showcasing one way in which an adversary may exfiltrate data using DNS queries. It begins by explaining how to configure both the infected machine and DNS server, complete with scripts used during red team engagements to both encode and transmit data, and a blue team investigation with detection and remediation strategies.
 
