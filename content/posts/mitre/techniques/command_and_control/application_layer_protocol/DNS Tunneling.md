@@ -83,7 +83,7 @@ sudo systemctl restart bind9
 sudo tail -f /var/log/named/query.log
 ```
 
-On a separate machine use the nslookup tool, from the dnsutils suite, to query your newly configured domain to test it. Feel free to use the infected machine for this, just make sure it's configured to use your new DNS (see the next section to learn how to do this). There's a snippet of both the command I used and the output below. If you've followed the steps correctly you will see the domain name and its resolved IP address.
+On a separate machine, use the nslookup tool from the dnsutils suite to query your newly configured domain and verify functionality. Feel free to use the infected machine for this, just make sure it's configured to use your new DNS (see the next section to learn how to do this). There's a snippet of both the command I used and the output below. If you've followed the steps correctly you will see the domain name and its resolved IP address.
 
 ```
 [alex@extarch c2-projects]$ nslookup homelab.local
@@ -94,7 +94,7 @@ Name:	homelab.local
 Address: 192.168.1.155
 ```
 
-The command above served two purposes, you've checked to make sure your domain resolves correctly and you've also generated a log. The server, still running `tail -f /var/log/named/query.log`, will show two queries made by the caller - one for IPv4 (A) and one for IPv6 (AAAA):
+This command serves two purposes: verifying that the domain resolves correctly and generating a log entry. The server, still running `tail -f /var/log/named/query.log`, will show two queries made by the caller - one for IPv4 (A) and one for IPv6 (AAAA):
 ```
 client @0x77042c1ca578 192.168.1.182#36083 (homelab.local): query: homelab.local IN A + (192.168.1.155)
 client @0x77042c1ca578 192.168.1.182#35547 (homelab.local): query: homelab.local IN AAAA + (192.168.1.155)
