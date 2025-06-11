@@ -15,7 +15,9 @@ author: Alex Jenkins
 # Introduction
 The Domain Name System (DNS) is a common Application Layer protocol that communicates over port 53. Many organisations will allow traffic over this protocol because it is essential for translating domain names into IP addresses. Adversaries may use this to their advantage and communicate with their Command and Control (C2) servers over this commonly-used protocol, blending in with normal traffic.  
 
-In today's lab I will be demonstrating my own take on this issue, showcasing one way in which an adversary may exfiltrate data using DNS queries. It walks through the configuration of an infected machine and a DNS server, and includes scripts that demonstrate how red teamers might encode and transmit data. The lab concludes with a blue team investigation into detection and remediation strategies.
+In today's lab I will be demonstrating my own take on this issue, showcasing one way in which an adversary may exfiltrate data using DNS queries. It walks through the configuration of an infected machine and a DNS server, and includes scripts that demonstrate how red teamers might extract, encode and transmit data. The lab concludes with a blue team investigation into detection and remediation strategies.
+
+Though the main technique explored in this lab is T1081.004, there is a slight crossover with T1132.001. This is because domain queries made over the DNS protocol can fail if any obscure characters exist, therefore all exfiltrated data from the infected machine is encoded with base64 first. In this case the infected machine refers to the host machine which contains malware responsible for extracting information and sending it to the Command and Control server over DNS.
 
 # Configuration
 For this configuration I am using Ubuntu Server 24.04.2 LTS for my C2 server and Arch Linux for the infected machine. You don't need to use Arch for your host, you can use whatever Linux OS you want. Ubuntu Server is recommended because it's what I've used for this lab and it has nice easy-to-use DNS software ready to install from the package repository. Go ahead and set those two machines up then continue reading.
