@@ -4,7 +4,7 @@ date: 2025-06-11
 draft: false
 author: Alex Jenkins
 ---
-> This is for educational purposes only. Using these techniques outside of controlled environments may violate policy or law.
+> This article is for educational purposes only. Using these techniques outside of controlled environments may violate policy or law. Please see the (disclaimer)[ref] for more information.
 
 | Category      | ID        | Description       |
 | ------------- | --------- | ----------------- |
