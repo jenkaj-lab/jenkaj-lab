@@ -15,22 +15,22 @@ author: Alex Jenkins
 # Introduction
 The Domain Name System (DNS) is a common Application Layer protocol that communicates over port 53. Many organisations will allow traffic over this protocol because it is essential for translating domain names into IP addresses. Adversaries may use this to their advantage and communicate with their Command and Control (C2) servers over this commonly-used protocol, blending in with normal traffic.  
 
-In today's lab I will be demonstrating my own take on this issue, showcasing one way in which an adversary may exfiltrate data using DNS queries. It walks through the configuration of an infected machine and a DNS server, and includes scripts that demonstrate how red teamers might extract, encode and transmit data. The lab concludes with a blue team investigation into detection and remediation strategies.
+In today's lab I will be demonstrating my own take on this issue, showcasing one way in which an adversary may exfiltrate data using DNS queries. It walks through the configuration of an infected machine and a DNS server, and includes scripts that demonstrate how adversaries might extract, encode and transmit data. The lab concludes with a blue team investigation into detection and remediation strategies.
 
-Though the main technique explored in this lab is T1081.004, there is a slight crossover with T1132.001. This is because domain queries made over the DNS protocol can fail if any obscure characters exist, therefore all exfiltrated data from the infected machine is encoded with base64 first. This isn't a direct demonstration of the technique itself, but rather a necessary caveat of my chosen extraction method. The infected machine in this case refers to the host machine which contains malware responsible for extracting information and sending it to the C2 server over DNS.
+Though the main technique explored in this lab is `T1081.004`, there is a slight crossover with `T1132.001`. This is because domain queries made over the DNS protocol can fail if any obscure characters exist, therefore all exfiltrated data from the infected machine is encoded with base64 first. This isn't a direct demonstration of the technique itself, but rather a necessary caveat of my chosen extraction method. The infected machine in this case refers to the host machine which contains malware responsible for extracting information and sending it to the C2 server over DNS.
 
 # Configuration
 For this configuration I am using Ubuntu Server 24.04.2 LTS for my C2 server and Arch Linux for the infected machine. You don't need to use Arch for your infected machine, you can use whatever Linux OS you want. I recommend Ubuntu Server for the C2 machine because it offers easy-to-install DNS software from the package repository. Go ahead and set those two machines up then continue with the server config.
 
 ### Server
-First of all, make sure you download bind9 and dnsutils. bind9 is what we will be using as the name server, and dnsutils gives us some common DNS troubleshooting tools like nslookup. Install these with the following command:
+First of all, make sure you download `bind9` and `dnsutils`. `bind9` is what we will be using as the name server, and `dnsutils` gives us some common DNS troubleshooting tools like `nslookup`. Install these with the following command:
 ```
 sudo apt-get install bind9 dnsutils
 ```
 
 I will be covering all the steps required to get this up and running, but I would encourage you to read [Ubuntu's Tutorial](https://documentation.ubuntu.com/server/how-to/networking/install-dns/index.html) on setting up a DNS server because it's much more comprehensive than mine. It's also a very good place to start if you're a beginner and have never setup a DNS server before.
 
-To setup the forward lookup zone you need to modify `/etc/bind/named.conf.local`. You'll change this to use whatever FQDN you want, I've gone with the very creative homelab.local, then list it as type master and point it to your new file. This tells BIND9 where to look for your forward zone configurations.
+To setup the forward lookup zone you need to modify `/etc/bind/named.conf.local`. You'll change this to use whatever FQDN you want, I've gone with the very creative `homelab.local`, then list it as type _master_ and point it to your new file. This tells the DNS where to look for your forward zone configurations.
 ```
 zone "homelab.local" {
   type master;
@@ -38,13 +38,13 @@ zone "homelab.local" {
 };
 ```
 
-The next logical step should then be to make the forwards zone file. To do that just copy an existing zone file as a template for editing, matching the file path you used in `named.conf.local`.
+The next logical step should then be to make the forward zone file. To do that just copy an existing zone file as a template for editing, matching the file path you used in `named.conf.local`.
 ```
 sudo cp /etc/bind/db.local /etc/bind/db.homelab.local
 ```
 
 Now you want to open that file in a text editor and make some changes. You can copy my file, just make sure you change it to reflect the correct domain and IP address for your nameserver.  
-Important: The serial number needs to be incremented any time you make a change to this file.
+> Important: The serial number needs to be incremented any time you make a change to this file.
 ```
 ;
 ; BIND data file for local loopback interface
@@ -61,7 +61,7 @@ $TTL    604800
 @       IN      A       192.168.1.155      
 ```
 
-That's all you need to do to make a working DNS, but we need to go one step further and enable logging. Enabling logs will allow us to capture queries from the infected machine and save them for processing. This file doesn't have any system-specific content so feel free to just copy and paste it if you want. Make these changes to `/etc/bind/named.conf`.
+That's all you need to do to make a working DNS, but we need to go one step further and enable logging. Enabling logs will allow us to capture queries from the infected machine and save them for processing. This file doesn't have any system-specific content so feel free to just copy and paste it if you want. Pop these changes into `/etc/bind/named.conf`:
 ```
 include "/etc/bind/named.conf.options";
 include "/etc/bind/named.conf.local";
