@@ -1,7 +1,6 @@
 ---
 title: Legal & Ethical Disclaimer
 url: "/disclaimer"
-menu: footer
 ---
 The content presented on this blog is intended strictly for **educational, informational, and research purposes**. This includes—but is not limited to—posts covering **system configurations**, **red team engagement techniques**, and **blue team detection and remediation strategies**. All demonstrations are conducted in **controlled, private environments** without access to or use of public IP addresses or external systems.
 
