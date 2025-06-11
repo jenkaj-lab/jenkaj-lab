@@ -10,7 +10,7 @@ paginate = 20
     name = 'Posts'
     pageRef = '/'
     weight = 10
-  [[menus.footer]]
+  [[menus.main]]
     name = 'Disclaimer'
     pageRef = '/disclaimer'
     weight = 20
