@@ -8,7 +8,7 @@ author: Alex Jenkins
 
 | Category      | ID        | Description       |
 | ------------- | --------- | ----------------- |
-| Tactic        | TA011     | Command and Control |
+| Tactic        | TA0011     | Command and Control |
 | Technique     | T1071     | Application Layer Protocol  |
 | Sub-Technique | T1071.004 | Application Layer Protocol: DNS |
 
