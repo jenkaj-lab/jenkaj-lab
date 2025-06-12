@@ -22,7 +22,7 @@ Though the main technique explored in this lab is `T1081.004`, there is a slight
 # Configuration
 For this configuration I am using Ubuntu Server 24.04.2 LTS for my C2 server and Arch Linux for the infected machine. You don't need to use Arch for your infected machine, you can use whatever Linux OS you want. I recommend Ubuntu Server for the C2 machine because it offers easy-to-install DNS software from the package repository. Go ahead and set those two machines up then continue with the server config.
 
-### Server
+### C2 Server
 First of all, make sure you download `bind9` and `dnsutils`. `bind9` is what we will be using as the name server, and `dnsutils` gives us some common DNS troubleshooting tools like `nslookup`. Install these with the following command:
 ```
 sudo apt-get install bind9 dnsutils
