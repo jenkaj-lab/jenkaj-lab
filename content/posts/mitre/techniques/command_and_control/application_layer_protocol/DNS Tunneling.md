@@ -103,11 +103,10 @@ This command serves two purposes:
 1. Verify that the domain resolves correctly
 2. Create a log entry on the server
 
-The server, still running `tail -f /var/log/named/query.log`, should have created a log entry for that query:
+The server, still running `tail -f /var/log/named/query.log`, creates a log entry for that query entry that should look similar to this:
 ```
 client @0x77042c1ca578 192.168.1.182#36083 (homelab.local): query: homelab.local IN A + (192.168.1.155)
 ```
-If both of these tests have passed, you're ready to continue.
 
 ### Infected Machine
 On the infected machine modify `/etc/resolv.conf` to include:
