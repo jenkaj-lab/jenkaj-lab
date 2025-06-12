@@ -103,7 +103,7 @@ This command serves two purposes:
 1. Verify that the domain resolves correctly
 2. Create a log entry on the server
 
-The server, still running `tail -f /var/log/named/query.log`, creates a log entry for that query entry that should look similar to this:
+The server, still running `tail -f /var/log/named/query.log`, will print a log entry for that query that should look similar to the following snippet:
 ```
 client @0x77042c1ca578 192.168.1.182#36083 (homelab.local): query: homelab.local IN A + (192.168.1.155)
 ```
