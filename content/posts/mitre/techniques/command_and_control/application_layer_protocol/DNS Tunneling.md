@@ -15,7 +15,7 @@ author: Alex Jenkins
 # Introduction
 The Domain Name System (DNS) is a common Application Layer protocol that communicates over port 53. Many organisations will allow traffic over this protocol because it is essential for translating domain names into IP addresses. Adversaries may use this to their advantage and communicate with their Command and Control (C2) servers over this commonly-used protocol, blending in with normal traffic.  
 
-In today's lab I will be demonstrating my own take on this issue, showcasing one way in which an adversary may exfiltrate data using DNS queries. It walks through the configuration of an infected machine, DNS server, gateway, and includes scripts that demonstrate how adversaries might extract, encode and transmit data. The lab concludes with a blue team investigation into detection and remediation strategies.
+In today's lab I will be demonstrating my own take on this issue, showcasing one way in which an adversary may exfiltrate data using DNS queries. It walks through the configuration of an infected machine, DNS server, firewall, and includes scripts that demonstrate how adversaries might extract, encode and transmit data. The lab concludes with a blue team investigation into detection and remediation strategies.
 
 Though the main technique explored in this lab is `T1081.004`, there is a slight crossover with `T1132.001`. This is because domain queries made over the DNS protocol can fail if any obscure characters exist, therefore all exfiltrated data from the infected machine is encoded with base64 first. This isn't a direct demonstration of the technique itself, but rather a necessary caveat of my chosen extraction method. In this case, the infected machine refers to the system hosting malware, which extracts system information and exfiltrates it to a malicious DNS server.
 
@@ -24,7 +24,7 @@ For this configuration I am using Ubuntu Server 24.04.2 LTS for the C2 server an
 
 During this configuration I will expect you to have some experience working with Virtual Machines (VMs). This is important because I will not be going into specifics of how to configure the VM. You will be responsible for managing your own virtual hardware and resource allocation.
 
-My servers and hosts are setup as VMs using VirtualBox. I've decided on this purely because it works well on Linux, and because it's software that I'm familiar with. Use whatever virtualization technology you're comfortable with to setup your three VMs, then continue reading to begin configuring your server.
+My servers and hosts are setup as VMs using VirtualBox. I've decided on this purely because it works well on Linux, and because it's software that I'm familiar with. Use whatever virtualization technology you're comfortable with to setup your three VMs, then continue reading to configure the DNS.
 
 ### C2 Server
 First of all, make sure you download `bind9` and `dnsutils`. `bind9` is what we will be using as the name server, and `dnsutils` gives us some common DNS troubleshooting tools like `nslookup`. Install these with the following command:
