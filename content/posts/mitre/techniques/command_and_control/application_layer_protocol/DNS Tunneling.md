@@ -101,13 +101,13 @@ Address: 192.168.1.155
 This command serves two purposes: 
 
 1. Verify that the domain resolves correctly
-2. Create a log entry
+2. Create a log entry on the server
 
-The server, still running `tail -f /var/log/named/query.log`, will show the query made by the caller. In my case this actually resolved two records to one domain - one for IPv4 (A) and the other for IPv6 (AAAA):
+The server, still running `tail -f /var/log/named/query.log`, should have created a log entry for that query:
 ```
 client @0x77042c1ca578 192.168.1.182#36083 (homelab.local): query: homelab.local IN A + (192.168.1.155)
-client @0x77042c1ca578 192.168.1.182#35547 (homelab.local): query: homelab.local IN AAAA + (192.168.1.155)
 ```
+If both of these tests have passed, you're ready to continue.
 
 ### Infected Machine
 On the infected machine modify `/etc/resolv.conf` to include:
