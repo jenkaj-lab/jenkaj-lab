@@ -98,7 +98,12 @@ Name:	homelab.local
 Address: 192.168.1.155
 ```
 
-This command serves two purposes: verifying that the domain resolves correctly and generating a log entry. The server, still running `tail -f /var/log/named/query.log`, will show two queries made by the caller - one for IPv4 (A) and one for IPv6 (AAAA):
+This command serves two purposes: 
+
+1. Verify that the domain resolves correctly
+2. Create a log entry
+
+The server, still running `tail -f /var/log/named/query.log`, will show the query made by the caller. In my case this actually resolved two records to one domain - one for IPv4 (A) and the other for IPv6 (AAAA):
 ```
 client @0x77042c1ca578 192.168.1.182#36083 (homelab.local): query: homelab.local IN A + (192.168.1.155)
 client @0x77042c1ca578 192.168.1.182#35547 (homelab.local): query: homelab.local IN AAAA + (192.168.1.155)
