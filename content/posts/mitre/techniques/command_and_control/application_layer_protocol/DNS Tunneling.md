@@ -118,6 +118,8 @@ This simulates real-world DNS connection. In doing this you can keep it isolated
 
 ---- config to connect to firewall
 
+> lots to change here. make a new VM for the infected machine and make a separate server that you call firewall. the firewall will have rules to allow DNS traffic which fits with my narrative. with this you can isolate traffic from the infected machine and use the firewall as a gateway to forward traffic throughout the network. This machine is essentially going to be the choke point and the only way that the infected machine can communicate by using a host only network. This means setting up two NICs on the firewall to allow host only Comms and NAT to the rest of the network so that it can communicate with DNS. I can use this server for future projects and only test security shit on it rather than conflicting with wazuh. that said it will feed logs into wazuh when I make a detection rule. Having this setup as a firewall and forcing traffic through it emulated a real-world scenario where a secure network would route traffic through a firewall first, exposing port 53 because it's a necessary port for IP resolution, and feeds well into my narrative. This does mean that my bit on setting the DNS on the infected machine is wrong because I need to add that to the firewall instead now.
+
 ### Gateway
 
 # Red Team
