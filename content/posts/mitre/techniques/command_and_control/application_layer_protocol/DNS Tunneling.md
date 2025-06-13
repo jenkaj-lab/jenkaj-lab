@@ -157,12 +157,14 @@ And you should see that your adapter now has the IP address you assigned.
        valid_lft forever preferred_lft forever
 ```
 
+Then you need to configure forwarding:
 ```
 sudo sysctl -w net.ipv4.ip_forward=1
 sudo iptables -t nat -A POSTROUTING -o enp0s3 -j MASQUERADE
 sudo iptables -A FORWARD -i enp0s8 -o enp0s3 -j ACCEPT
 sudo iptables -A FORWARD -i enp0s3 -o enp0s8 -m state --state RELATED, ESTABLISHED -j ACCEPT
 ```
+
 
 
 
