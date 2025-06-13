@@ -108,7 +108,75 @@ The server, still running `tail -f /var/log/named/query.log`, will print a log e
 client @0x77042c1ca578 192.168.1.182#36083 (homelab.local): query: homelab.local IN A + (192.168.1.155)
 ```
 
+### Firewall
+Configure two network adapters - one host-only and one NAT. The host-only should be shared with the infected machine and the NAT will allow you to communicate with wider internet and the rest of the network. Essentially acting as a gateway to the internet for the infected machine.
+
+To configure the firewall you need to have two Network Interface Cards (NICs). One will link exclusively with the infected machine, and the other will allow the firewall to freely communicate with the internet and internal network. To do this you'll typically need to setup a Host-Only adapter and a Network Address Translation (NAT) adapter. Or in my case, a bridged adapter because I'm using a Wi-Fi adapter. In any case you'll need to make some configurations on both machines to enable communication between the two machines. If you make the first NIC your normal adapter (i.e. one that can reach the internet without any effort) you should only need to configure the Host-Only link.
+
+
+```
+3: enp0s8: <BROADCAST,MULTICAST> mtu 1500 qdisc fq_codel state DOWN group default qlen 1000
+    link/ether 08:00:27:7d:98:82 brd ff:ff:ff:ff:ff:ff
+```
+
+```
+sudo ip link set enp0s up
+```
+
+```
+3: enp0s8: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+    link/ether 08:00:27:7d:98:82 brd ff:ff:ff:ff:ff:ff
+    inet6 fe80::a00:27ff:fe7d:9882/64 scope link 
+       valid_lft forever preferred_lft forever
+```
+
+Edit your network config file. In Ubuntu it will be in `/etc/netplan/` by default. Mine is `/etc/netplan/50-cloud-init.yaml` for example. When you do this you'll need to make a new entry for your network adapter that you just brought up. Make sure the address you use here aligns with what's configured in your host-only adapter in your VM software settings.
+```
+network:
+  version: 2
+  ethernets:
+    enp0s3:
+      dhcp4: true
+    enp0s8:
+      addresses:
+        - 192.168.56.10/24
+```
+When that's done run
+```
+sudo netplan apply
+ip addr
+```
+
+And you should see that your adapter now has the IP address you assigned.
+```
+3: enp0s8: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+    link/ether 08:00:27:7d:98:82 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.56.10/24 brd 192.168.56.255 scope global enp0s8
+       valid_lft forever preferred_lft forever
+    inet6 fe80::a00:27ff:fe7d:9882/64 scope link 
+       valid_lft forever preferred_lft forever
+```
+
+```
+sudo sysctl -w net.ipv4.ip_forward=1
+sudo iptables -t nat -A POSTROUTING -o enp0s3 -j MASQUERADE
+sudo iptables -A FORWARD -i enp0s8 -o enp0s3 -j ACCEPT
+sudo iptables -A FORWARD -i enp0s3 -o enp0s8 -m state --state RELATED, ESTABLISHED -j ACCEPT
+```
+
+
+
 ### Infected Machine
+
+Figure out what your network card's name is using `ip addr` then do the following:
+```
+sudo ip link set enp0s3 up
+sudo ip addr add 192.168.56.11/24 dev enp0s3
+sudo ip route add default via 192.168.56.10
+```
+
+---
+
 On the infected machine modify `/etc/resolv.conf` to include:
 ```
 nameserver 192.168.1.155 # Change this to the IP of your DNS server
@@ -118,8 +186,6 @@ This simulates real-world DNS connection. In doing this you can keep it isolated
 ---- config to connect to firewall
 
 > lots to change here. make a new VM for the infected machine and make a separate server that you call firewall. the firewall will have rules to allow DNS traffic which fits with my narrative. with this you can isolate traffic from the infected machine and use the firewall as a gateway to forward traffic throughout the network. This machine is essentially going to be the choke point and the only way that the infected machine can communicate by using a host only network. This means setting up two NICs on the firewall to allow host only Comms and NAT to the rest of the network so that it can communicate with DNS. I can use this server for future projects and only test security shit on it rather than conflicting with wazuh. that said it will feed logs into wazuh when I make a detection rule. Having this setup as a firewall and forcing traffic through it emulated a real-world scenario where a secure network would route traffic through a firewall first, exposing port 53 because it's a necessary port for IP resolution, and feeds well into my narrative. This does mean that my bit on setting the DNS on the infected machine is wrong because I need to add that to the firewall instead now.
-
-### Gateway
 
 # Red Team
 With configuration finished the red team engagement can commence. For this part we assume that the adversary has already managed to get malware onto the victim's machine, and it is now infected. This malware was created specifically for this lab, is written in Python, and is provided in the next code block.
@@ -133,7 +199,7 @@ I've named this malware `dns_tunneling.py` and its sole purpose is to extract in
 
 Encoding with base64 is required because DNS operates with a strict set of character limitations. This means that certain special characters like spaces, slashes and non-ASCII symbols could break the query entirely. When you encode this data with base64 you're essentially sanitizing the data so that it doesn't interfere with the query's structure.
 
-Please note the DNS toolkit used in this malware is not installed by default. `subprocess` and `base64` will be included with a typical Python install but you will need to install `dnspython` to get the exfiltration section to work. You can do this by running `pip install dnspython`.
+Please note the DNS toolkit used in this malware is not installed by default. `subprocess` and `base64` will be included with a typical Python install but you will need to install `dnspython` to get the exfiltration section to work. You can do this by running `pip install dnspython`. Note that this likely won't work and you'll have to use your chosen distribution's package manager to install this, or setup a virtual environment with Python. I went with the package option and ran `sudo pacman -S python-dnspython`.
 
 ``` python
 def base64_encode(data):
