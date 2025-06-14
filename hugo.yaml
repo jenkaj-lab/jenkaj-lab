@@ -2,6 +2,7 @@ baseURL: 'https://jenkaj-lab.github.io/jenkaj-lab/'
 canonifyURLs: true
 languageCode: 'en-gb'
 title: 'My MITRE ATT&CK Journey'
+css: ["css/main.css"]
 theme: 'alex'
 
 pagination:
