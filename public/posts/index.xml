@@ -4,16 +4,23 @@
     <title>Posts on My MITRE ATT&amp;CK Journey</title>
     <link>http://localhost:1313/jenkaj-lab/posts/</link>
     <description>Recent content in Posts on My MITRE ATT&amp;CK Journey</description>
-    <generator>Hugo -- gohugo.io</generator>
+    <generator>Hugo</generator>
     <language>en-gb</language>
-    <lastBuildDate>Thu, 16 Jan 2025 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Wed, 11 Jun 2025 00:00:00 +0000</lastBuildDate>
     <atom:link href="http://localhost:1313/jenkaj-lab/posts/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>First test</title>
-      <link>http://localhost:1313/jenkaj-lab/posts/test/</link>
-      <pubDate>Thu, 16 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>http://localhost:1313/jenkaj-lab/posts/test/</guid>
-      <description>hello</description>
+      <title>DNS Tunneling</title>
+      <link>http://localhost:1313/jenkaj-lab/posts/mitre/command_and_control/application_layer_protocol/dns-tunneling/</link>
+      <pubDate>Wed, 11 Jun 2025 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/jenkaj-lab/posts/mitre/command_and_control/application_layer_protocol/dns-tunneling/</guid>
+      <description>&lt;table&gt;&#xA;  &lt;thead&gt;&#xA;      &lt;tr&gt;&#xA;          &lt;th&gt;Category&lt;/th&gt;&#xA;          &lt;th&gt;ID&lt;/th&gt;&#xA;          &lt;th&gt;Description&lt;/th&gt;&#xA;      &lt;/tr&gt;&#xA;  &lt;/thead&gt;&#xA;  &lt;tbody&gt;&#xA;      &lt;tr&gt;&#xA;          &lt;td&gt;Tactic&lt;/td&gt;&#xA;          &lt;td&gt;TA0011&lt;/td&gt;&#xA;          &lt;td&gt;Command and Control&lt;/td&gt;&#xA;      &lt;/tr&gt;&#xA;      &lt;tr&gt;&#xA;          &lt;td&gt;Techniques&lt;/td&gt;&#xA;          &lt;td&gt;T1071, T1132&lt;/td&gt;&#xA;          &lt;td&gt;Application Layer Protocol, Data Encoding&lt;/td&gt;&#xA;      &lt;/tr&gt;&#xA;      &lt;tr&gt;&#xA;          &lt;td&gt;Sub-Techniques&lt;/td&gt;&#xA;          &lt;td&gt;T1071.004, T1132.001&lt;/td&gt;&#xA;          &lt;td&gt;DNS, Standard Encoding&lt;/td&gt;&#xA;      &lt;/tr&gt;&#xA;  &lt;/tbody&gt;&#xA;&lt;/table&gt;&#xA;&lt;h1 id=&#34;introduction&#34;&gt;Introduction&lt;/h1&gt;&#xA;&lt;p&gt;The Domain Name System (DNS) is a common Application Layer protocol that communicates over port 53. Many organisations will allow traffic over this protocol because it is essential for translating domain names into IP addresses. Adversaries may use this to their advantage and communicate with their Command and Control (C2) servers over this commonly-used protocol, blending in with normal traffic.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>LDAP Password Guessing</title>
+      <link>http://localhost:1313/jenkaj-lab/posts/mitre/brute_force/password_guessing/ldap-password-guessing/</link>
+      <pubDate>Fri, 25 Apr 2025 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/jenkaj-lab/posts/mitre/brute_force/password_guessing/ldap-password-guessing/</guid>
+      <description>&lt;table&gt;&#xA;  &lt;thead&gt;&#xA;      &lt;tr&gt;&#xA;          &lt;th&gt;Category&lt;/th&gt;&#xA;          &lt;th&gt;ID&lt;/th&gt;&#xA;          &lt;th&gt;Description&lt;/th&gt;&#xA;      &lt;/tr&gt;&#xA;  &lt;/thead&gt;&#xA;  &lt;tbody&gt;&#xA;      &lt;tr&gt;&#xA;          &lt;td&gt;Tactic&lt;/td&gt;&#xA;          &lt;td&gt;TA0006&lt;/td&gt;&#xA;          &lt;td&gt;Credential Access&lt;/td&gt;&#xA;      &lt;/tr&gt;&#xA;      &lt;tr&gt;&#xA;          &lt;td&gt;Technique&lt;/td&gt;&#xA;          &lt;td&gt;T1110&lt;/td&gt;&#xA;          &lt;td&gt;Brute Force&lt;/td&gt;&#xA;      &lt;/tr&gt;&#xA;      &lt;tr&gt;&#xA;          &lt;td&gt;Sub-Technique&lt;/td&gt;&#xA;          &lt;td&gt;T1110.001&lt;/td&gt;&#xA;          &lt;td&gt;Password Guessing&lt;/td&gt;&#xA;      &lt;/tr&gt;&#xA;  &lt;/tbody&gt;&#xA;&lt;/table&gt;&#xA;&lt;h1 id=&#34;introduction&#34;&gt;Introduction&lt;/h1&gt;&#xA;&lt;p&gt;In this lab I will be demonstrating the MITRE ATT&amp;amp;CK sub-technique &lt;code&gt;T1110.001: Password Guessing&lt;/code&gt;. This involves exploiting Active Directory&amp;rsquo;s (AD) Lightweight Directory Access Protocol (LDAP), harnessing its authentication mechanism to brute force a known user&amp;rsquo;s password. Wazuh is used to analyze the logs generated resulting from both the authentication failures and success post account compromise.&lt;/p&gt;</description>
     </item>
   </channel>
 </rss>

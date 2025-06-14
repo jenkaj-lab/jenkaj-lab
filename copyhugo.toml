@@ -3,7 +3,8 @@ canonifyURLs = true
 languageCode = 'en-gb'
 title = 'My MITRE ATT&CK Journey'
 theme = 'maverick'
-paginate = 20
+[pagination]
+  pagerSize = 20
 
 [menus]
   [[menus.main]]
