@@ -113,16 +113,18 @@ Configure two network adapters - one host-only and one NAT. The host-only should
 
 To configure the firewall you need to have two Network Interface Cards (NICs). One will link exclusively with the infected machine, and the other will allow the firewall to freely communicate with the internet and internal network. To do this you'll typically need to setup a Host-Only adapter and a Network Address Translation (NAT) adapter. Or in my case, a bridged adapter because I'm using a Wi-Fi adapter. In any case you'll need to make some configurations on both machines to enable communication between the two machines. If you make the first NIC your normal adapter (i.e. one that can reach the internet without any effort) you should only need to configure the Host-Only link.
 
-
+To begin, type `ip addr` into your terminal to see your network devices. You should see two NICs, one of which will be down like in the example below:
 ```
 3: enp0s8: <BROADCAST,MULTICAST> mtu 1500 qdisc fq_codel state DOWN group default qlen 1000
     link/ether 08:00:27:7d:98:82 brd ff:ff:ff:ff:ff:ff
 ```
 
+This is the NIC we'll be using for our Host-Only network. Bring up this interface.
 ```
 sudo ip link set enp0s up
 ```
 
+After you've run that command you should see that it's state has changed. Run `ip addr` again to verify that.
 ```
 3: enp0s8: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
     link/ether 08:00:27:7d:98:82 brd ff:ff:ff:ff:ff:ff
@@ -165,29 +167,23 @@ sudo iptables -A FORWARD -i enp0s8 -o enp0s3 -j ACCEPT
 sudo iptables -A FORWARD -i enp0s3 -o enp0s8 -m state --state RELATED, ESTABLISHED -j ACCEPT
 ```
 
+You'll also need to modify `/etc/resolv.conf`. Doing this simulates real-world DNS connection by adding the C2 server to the list of recognised nameservers. In other words; you'll be allowing the infected machine to treat your server as its own DNS, enabling IP resolution whilst keeping it isolated to your private network. In real-world scenarios this wouldn't be required because the domain would be internet facing and resolved by a public DNS provider.
+```
+nameserver 192.168.1.155 # Change this to the IP of your DNS server
+```
 
 
 
 ### Infected Machine
 
-Figure out what your network card's name is using `ip addr` then do the following:
+The infected machine doesn't need much in terms of configuration. Out of the box though this won't work, we'll need to connect it to the Host-Only network and route traffic through the firewall or it won't be able to reach the internet. Figure out what your network card's name is using `ip addr` then do the following:
 ```
 sudo ip link set enp0s3 up
 sudo ip addr add 192.168.56.11/24 dev enp0s3
 sudo ip route add default via 192.168.56.10
 ```
 
----
-
-On the infected machine modify `/etc/resolv.conf` to include:
-```
-nameserver 192.168.1.155 # Change this to the IP of your DNS server
-```
-This simulates real-world DNS connection. In doing this you can keep it isolated to your private network, allowing the infected machine to treat your server as its own DNS - enabling IP resolution. In real-world scenarios this wouldn't be required because the domain would be recognised by a public DNS provider.
-
----- config to connect to firewall
-
-> lots to change here. make a new VM for the infected machine and make a separate server that you call firewall. the firewall will have rules to allow DNS traffic which fits with my narrative. with this you can isolate traffic from the infected machine and use the firewall as a gateway to forward traffic throughout the network. This machine is essentially going to be the choke point and the only way that the infected machine can communicate by using a host only network. This means setting up two NICs on the firewall to allow host only Comms and NAT to the rest of the network so that it can communicate with DNS. I can use this server for future projects and only test security shit on it rather than conflicting with wazuh. that said it will feed logs into wazuh when I make a detection rule. Having this setup as a firewall and forcing traffic through it emulated a real-world scenario where a secure network would route traffic through a firewall first, exposing port 53 because it's a necessary port for IP resolution, and feeds well into my narrative. This does mean that my bit on setting the DNS on the infected machine is wrong because I need to add that to the firewall instead now.
+Make sure you change the name of the network interface and the IP addresses in those commands to fit your requirements. By running those three commands you've effectively activated the NIC, assigned an IP address to it, and told it to route traffic through the firewall.
 
 # Red Team
 With configuration finished the red team engagement can commence. For this part we assume that the adversary has already managed to get malware onto the victim's machine, and it is now infected. This malware was created specifically for this lab, is written in Python, and is provided in the next code block.
