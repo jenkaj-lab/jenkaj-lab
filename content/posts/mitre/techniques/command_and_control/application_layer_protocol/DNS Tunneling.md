@@ -109,7 +109,7 @@ client @0x77042c1ca578 192.168.1.182#36083 (homelab.local): query: homelab.local
 ```
 
 ### Firewall
-Configure two network adapters - one host-only and one NAT. The host-only should be shared with the infected machine and the NAT will allow you to communicate with wider internet and the rest of the network. Essentially acting as a gateway to the internet for the infected machine.
+Configure two network adapters - one host-only and one NAT. The host-only should be shared with the infected machine and the NAT will allow you to communicate with wider internet and the rest of the network, essentially acting as a gateway to the internet for the infected machine.
 
 To configure the firewall you need to have two Network Interface Cards (NICs). One will link exclusively with the infected machine, and the other will allow the firewall to freely communicate with the internet and internal network. To do this you'll typically need to setup a Host-Only adapter and a Network Address Translation (NAT) adapter. Or in my case, a bridged adapter because I'm using a Wi-Fi adapter. In any case you'll need to make some configurations on both machines to enable communication between the two machines. If you make the first NIC your normal adapter (i.e. one that can reach the internet without any effort) you should only need to configure the Host-Only link.
 
@@ -159,7 +159,7 @@ And you should see that your adapter now has the IP address you assigned.
        valid_lft forever preferred_lft forever
 ```
 
-Then you need to configure forwarding:
+Then you need to configure traffic forwarding:
 ```
 sudo sysctl -w net.ipv4.ip_forward=1
 sudo iptables -t nat -A POSTROUTING -o enp0s3 -j MASQUERADE
@@ -172,7 +172,11 @@ You'll also need to modify `/etc/resolv.conf`. Doing this simulates real-world D
 nameserver 192.168.1.155 # Change this to the IP of your DNS server
 ```
 
+Everything done on the firewall machine up until this point has enabled two-way communication with the infected machine, and established the C2 server as a recognised DNS resolver. The next steps will show some actual firewall cofigurations, which should help to understand the mechanics of DNS tunneling, and setup a sensor to monitor and detect suspicious network activity.
 
+- firewall
+- zeek
+- wazuh integration
 
 ### Infected Machine
 
