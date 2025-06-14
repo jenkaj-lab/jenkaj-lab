@@ -1,6 +1,4 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width">
 <title>{{ if .IsHome }}{{ site.Title }}{{ else }}{{ printf "%s | %s" .Title site.Title }}{{ end }}</title>
-{{ range .Site.Params.css -}}
-    <link rel="stylesheet" href="{{ . | absURL }}">
-{{ end }}
+<link rel="stylesheet" href=" {{ "css/main.css" | relURL }}">
