@@ -1,6 +1,0 @@
-Just run these 4 commands
-
-git pull origin main
-git add .
-git commit -m "message here"
-git push origin main
