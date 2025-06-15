@@ -1,8 +1,8 @@
 {{ define "main" }}
-  <h1>About</h1>
+  <h1>My MITRE ATT&CK Journey</h1>
   {{ .Content }}
   <h2>Latest Posts</h2>
   {{ range where site.RegularPages "Section" "posts" }}
-    <p><a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a></p>
+  <li><a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a> {{ .Date | time.Format "02/01/2006" }}</li>
   {{ end }}
 {{ end }}
