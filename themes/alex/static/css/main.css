@@ -17,11 +17,6 @@ footer {
   margin-top: 1rem;
 }
 
-a {
-  color: #00e;
-  text-decoration: none;
-}
-
 /* --- --- --- */
 /* DIV STYLING */
 /* --- --- --- */
@@ -179,4 +174,18 @@ header nav .links a:hover {
 }
 .meta p {
   margin: 0;
+}
+
+/* --- --- --- */
+/* SOCIAL BUTTONS STYLING */
+/* --- --- --- */
+.socials {
+  display: flex;
+  gap: 0.5em;
+}
+.socials a {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  font-size: 1.5em;
 }
