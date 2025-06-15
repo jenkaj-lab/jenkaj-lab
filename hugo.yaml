@@ -2,7 +2,6 @@ baseURL: 'https://jenkaj-lab.github.io/jenkaj-lab/'
 canonifyURLs: true
 languageCode: 'en-gb'
 title: 'My MITRE ATT&CK Journey'
-css: ["css/main.css"]
 theme: 'alex'
 
 pagination:
@@ -13,6 +12,10 @@ menus:
   - name: Posts
     pageRef: /
     weight: 10
-  - name: Legal
+  - name: Disclaimer
     pageRef: /disclaimer
     weight: 20
+  footer:
+  - name: Disclaimer
+    pageRef: /disclaimer
+    weight: 10
