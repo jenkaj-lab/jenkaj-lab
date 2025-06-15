@@ -4,6 +4,5 @@
   <h2>Latest Posts</h2>
   {{ range where site.RegularPages "Section" "posts" }}
     <p><a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a></p>
-    {{ .Summary | safeHTML }}
   {{ end }}
 {{ end }}
