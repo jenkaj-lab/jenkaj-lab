@@ -139,7 +139,7 @@ nav {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: grey;
+  background-color: #e5e5e5;
   padding: 1em 1em;
   flex-wrap: wrap;
 }
