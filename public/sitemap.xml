@@ -2,24 +2,24 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>http://localhost:1313/jenkaj-lab/posts/mitre/command_and_control/application_layer_protocol/dns-tunneling/</loc>
+    <loc>https://jenkaj-lab.github.io/jenkaj-lab/posts/mitre/command_and_control/application_layer_protocol/dns-tunneling/</loc>
     <lastmod>2025-06-11T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/jenkaj-lab/</loc>
+    <loc>https://jenkaj-lab.github.io/jenkaj-lab/</loc>
     <lastmod>2025-06-11T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/jenkaj-lab/posts/</loc>
+    <loc>https://jenkaj-lab.github.io/jenkaj-lab/posts/</loc>
     <lastmod>2025-06-11T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/jenkaj-lab/posts/mitre/brute_force/password_guessing/ldap-password-guessing/</loc>
+    <loc>https://jenkaj-lab.github.io/jenkaj-lab/posts/mitre/brute_force/password_guessing/ldap-password-guessing/</loc>
     <lastmod>2025-04-25T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/jenkaj-lab/categories/</loc>
+    <loc>https://jenkaj-lab.github.io/jenkaj-lab/categories/</loc>
   </url><url>
-    <loc>http://localhost:1313/jenkaj-lab/disclaimer/</loc>
+    <loc>https://jenkaj-lab.github.io/jenkaj-lab/disclaimer/</loc>
   </url><url>
-    <loc>http://localhost:1313/jenkaj-lab/legal/</loc>
+    <loc>https://jenkaj-lab.github.io/jenkaj-lab/legal/</loc>
   </url><url>
-    <loc>http://localhost:1313/jenkaj-lab/tags/</loc>
+    <loc>https://jenkaj-lab.github.io/jenkaj-lab/tags/</loc>
   </url>
 </urlset>
