@@ -135,7 +135,7 @@ header nav {
   justify-content: space-between;
   align-items: center;
   background-color: #e5e5e5;
-  padding: 1em 1em;
+  padding: 0 1em;
   flex-wrap: wrap;
   box-shadow: 0 2px 4px rgba(0,0,0,0.08);
 }
@@ -188,4 +188,9 @@ header nav .links a:hover {
   align-items: center;
   text-decoration: none;
   font-size: 1.5em;
+}
+.socials img {
+  border: none;
+  height: 1em;
+  width: auto;
 }
