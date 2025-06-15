@@ -10,6 +10,8 @@ author: Alex Jenkins
 | Technique     | T1110     | Brute Force       |
 | Sub-Technique | T1110.001 | Password Guessing |
 
+<!--more-->
+
 ## Introduction
 In this lab I will be demonstrating the MITRE ATT&CK sub-technique `T1110.001: Password Guessing`. This involves exploiting Active Directory's (AD) Lightweight Directory Access Protocol (LDAP), harnessing its authentication mechanism to brute force a known user's password. Wazuh is used to analyze the logs generated resulting from both the authentication failures and success post account compromise.
 

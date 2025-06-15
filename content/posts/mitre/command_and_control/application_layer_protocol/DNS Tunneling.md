@@ -10,6 +10,8 @@ author: Alex Jenkins
 | Techniques     | T1071, T1132     | Application Layer Protocol, Data Encoding  |
 | Sub-Techniques | T1071.004, T1132.001 | DNS, Standard Encoding |
 
+<!--more-->
+
 ## Introduction
 The Domain Name System (DNS) is a common Application Layer protocol that communicates over port 53. Many organisations will allow traffic over this protocol because it is essential for translating domain names into IP addresses. Adversaries may use this to their advantage and communicate with their Command and Control (C2) servers over this commonly-used protocol, blending in with normal traffic.  
 

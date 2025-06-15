@@ -15,7 +15,7 @@ Renders a menu for the given menu ID.
     <div class="title"><a href="{{ "/" | relURL }}"><i class="fa-solid fa-flask"></i> {{ site.Title }}</a></div>
     <ul class="links">
       {{ range . }}
-        <li><a href="{{ .URL }}">{{ .Name }}</a></li>
+        <li><a href="{{ .URL }}">{{ .Name | safeHTML }}</a></li>
       {{ end }}
     </ul>
   </nav>

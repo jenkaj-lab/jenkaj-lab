@@ -9,15 +9,12 @@ pagination:
 
 menus:
   main:
-  - name: Home
-    pageRef: /
-    weight: 10
   - name: Posts
     pageRef: /posts
-    weight: 20
+    weight: 10
   - name: About
     pageRef: /about
-    weight: 30
+    weight: 20
   footer:
   - name: Disclaimer
     pageRef: /disclaimer
