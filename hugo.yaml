@@ -10,17 +10,14 @@ pagination:
 menus:
   main:
   - name: Home
-    pageRef: /home
+    pageRef: /
     weight: 10
   - name: Posts
-    pageRef: /
+    pageRef: /posts
     weight: 20
   - name: About
     pageRef: /about
     weight: 30
-  - name: Disclaimer
-    pageRef: /disclaimer
-    weight: 40
   footer:
   - name: Disclaimer
     pageRef: /disclaimer

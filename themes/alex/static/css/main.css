@@ -130,7 +130,7 @@ h3 {
 /* --- --- --- */
 /* NAVBAR STYLING */
 /* --- --- --- */
-nav {
+header nav {
   position: fixed;
   top: 0;
   left: 0;
@@ -142,26 +142,27 @@ nav {
   background-color: #e5e5e5;
   padding: 1em 1em;
   flex-wrap: wrap;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
 }
-nav .title a {
+header nav .title a {
   font-size: 1em;
   font-weight: bold;
   color: #333;
   text-decoration: none;
 }
-nav .links {
+header nav .links {
   list-style: none;
   display: flex;
   gap: 1.5em;
   margin: 0;
   padding: 0;
 }
-nav .links li a {
+header nav .links li a {
   text-decoration: none;
   color: #333;
   font-weight: 500;
 }
-nav .links a:hover {
+header nav .links a:hover {
   color: #007acc;
 }
 

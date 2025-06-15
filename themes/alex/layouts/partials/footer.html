@@ -1,1 +1,11 @@
+<footer>
+    <nav> 
+        <ul>
+            {{ range .Site.Menus.footer }}
+                <li><a href="{{ .URL | relURL }}">{{ .Name }}</a></li>
+            {{ end }}
+        </ul>
+    </nav>
+</footer>
 <p>Copyright {{ now.Year }}. All rights reserved.</p>
+
