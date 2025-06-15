@@ -8,8 +8,8 @@ body {
 
 main {
   margin: auto;
-  padding: 0 2em;
   max-width: 768px;
+  padding: 0 1em;
 }
 
 footer {
