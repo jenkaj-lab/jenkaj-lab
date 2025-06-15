@@ -12,7 +12,7 @@ Renders a menu for the given menu ID.
 
 {{- with index site.Menus $menuID }}
   <nav>
-    <div class="title">{{ site.Title }}</div>
+    <div class="title"><a href="{{ "/" | relURL }}"><i class="fa-solid fa-flask"></i> {{ site.Title }}</a></div>
     <ul class="links">
       {{ range . }}
         <li><a href="{{ .URL }}">{{ .Name }}</a></li>

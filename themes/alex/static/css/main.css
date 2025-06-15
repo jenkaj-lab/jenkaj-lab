@@ -140,13 +140,14 @@ nav {
   justify-content: space-between;
   align-items: center;
   background-color: grey;
-  padding: 1em 2em;
+  padding: 1em 1em;
   flex-wrap: wrap;
 }
-nav .title {
+nav .title a {
   font-size: 1em;
   font-weight: bold;
   color: #333;
+  text-decoration: none;
 }
 nav .links {
   list-style: none;
