@@ -10,14 +10,14 @@ author: Alex Jenkins
 | Techniques     | T1071, T1132     | Application Layer Protocol, Data Encoding  |
 | Sub-Techniques | T1071.004, T1132.001 | DNS, Standard Encoding |
 
-# Introduction
+## Introduction
 The Domain Name System (DNS) is a common Application Layer protocol that communicates over port 53. Many organisations will allow traffic over this protocol because it is essential for translating domain names into IP addresses. Adversaries may use this to their advantage and communicate with their Command and Control (C2) servers over this commonly-used protocol, blending in with normal traffic.  
 
 In today's lab I will be demonstrating my own take on this issue, showcasing one way in which an adversary may exfiltrate data using DNS queries. It walks through the configuration of an infected machine, DNS server, firewall, and includes scripts that demonstrate how adversaries might extract, encode and transmit data. The lab concludes with a blue team investigation into detection and remediation strategies.
 
 Though the main technique explored in this lab is `T1081.004`, there is a slight crossover with `T1132.001`. This is because domain queries made over the DNS protocol can fail if any obscure characters exist, therefore all exfiltrated data from the infected machine is encoded with base64 first. This isn't a direct demonstration of the technique itself, but rather a necessary caveat of my chosen extraction method. In this case, the infected machine refers to the system hosting malware, which extracts system information and exfiltrates it to a malicious DNS server.
 
-# Configuration
+## Configuration
 For this configuration I am using Ubuntu Server 24.04.2 LTS for the C2 server and gateway, and Arch Linux for the infected machine. You don't need to use Arch for your infected machine, you can use whatever Linux distribution you're comfortable with. I recommend Ubuntu Server for the C2 server because it offers easy-to-install DNS software from the package repository, and is very beginner friendly.
 
 During this configuration I will expect you to have some experience working with Virtual Machines (VMs). This is important because I will not be going into specifics of how to configure the VM. You will be responsible for managing your own virtual hardware and resource allocation.
@@ -187,7 +187,7 @@ sudo ip route add default via 192.168.56.10
 
 Make sure you change the name of the network interface and the IP addresses in those commands to fit your requirements. By running those three commands you've effectively activated the NIC, assigned an IP address to it, and told it to route traffic through the firewall.
 
-# Red Team
+## Red Team
 With configuration finished the red team engagement can commence. For this part we assume that the adversary has already managed to get malware onto the victim's machine, and it is now infected. This malware was created specifically for this lab, is written in Python, and is provided in the next code block.
 
 I've named this malware `dns_tunneling.py` and its sole purpose is to extract information from the infected machine and exfiltrate it over DNS to the C2 server. That might sound complicated, but it's quite easy when you break it down into steps:
@@ -281,7 +281,7 @@ alex 6.14.10-arch1-1
 
 With that you've had a basic example of how an adversary might exfiltrate data via the DNS protocol. The example I've given is the first step of communication, where the server has now received information which it can use to identify the infected machine. In future communications the infected machine could prefix messages with this information so that the C2 server may recognise the source of the data.
 
-# Blue Team
+## Blue Team
 
 `tshark`
 ```

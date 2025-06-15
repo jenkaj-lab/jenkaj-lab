@@ -1,10 +1,16 @@
 {{ define "main" }}
-  <h1>{{ .Title }}</h1>
+
 
   {{ $dateMachine := .Date | time.Format "2006-01-02T15:04:05-07:00" }}
   {{ $dateHuman := .Date | time.Format ":date_long" }}
-  <time datetime="{{ $dateMachine }}">{{ $dateHuman }}</time>
+  {{ if in .File.Path "posts/" }}
+  <div class="meta">
+    <p><i class="fas fa-user"></i> {{ .Params.author }}</p> 
+    <p><i class="fas fa-calendar-alt"></i> {{ $dateHuman }}</p>
+  </div>
+  {{ end }}
 
+  <h1>{{ .Title }}</h1>
   {{ if in .File.Path "posts/mitre/" }}
     <div class="disclaimer">
       <p><strong>For educational purposes only</strong>. The techniques described in these articles are intended for use in controlled environments. Using them in unauthorized settings may violate policy or law. For more information, please read the <a href="https://jenkaj-lab.github.io/jenkaj-lab/disclaimer/">full disclaimer</a>.</p>
