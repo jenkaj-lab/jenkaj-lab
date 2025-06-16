@@ -1,4 +1,5 @@
 body {
+  height: 100%;
   color: #222;
   font-family: sans-serif;
   line-height: 1.5;
@@ -6,7 +7,14 @@ body {
   padding-top: 70px;
 }
 
+.page-container {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
 main {
+  flex: 1;
   margin: auto;
   max-width: 768px;
   padding: 0 1em;
@@ -166,19 +174,19 @@ footer nav {
   flex-wrap: wrap;
   align-items: center;
 }
-footer nav .left ul {
+footer nav .right ul {
   list-style: none;
   padding: 0;
   margin: 0;
   display: flex;
   gap: 1.5em;
 }
-footer nav .left a {
+footer nav .right a {
   text-decoration: none;
   color: inherit;
   transition: color 0.3s ease;
 }
-footer nav .left a:hover {
+footer nav .right a:hover {
   color: #0077cc;
 }
 
@@ -187,7 +195,7 @@ footer nav .left a:hover {
 /* META STYLING */
 /* --- --- --- */
 .meta {
-  display: flex;
+  display: static;
   gap: 1em;
   flex-wrap: wrap;
   font-size: 0.9rem;

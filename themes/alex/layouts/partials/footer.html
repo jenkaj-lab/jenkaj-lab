@@ -1,16 +1,16 @@
 <footer>
     <nav> 
         <div class="left">
+            {{ partial "socials" }}
+        </div>
+        <div class="right">
             <ul>
                 {{ range .Site.Menus.footer }}
                     <li><a href="{{ .URL | relURL }}">{{ .Name }}</a></li>
                 {{ end }}
             </ul>
         </div>
-        <div class="right">
-            {{ partial "socials" }}
-        </div>
-    </nav>
+            </nav>
 </footer>
 <p>Copyright {{ now.Year }}. All rights reserved.</p>
 
