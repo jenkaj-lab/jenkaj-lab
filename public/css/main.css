@@ -217,16 +217,16 @@ footer nav .right a:hover {
 }
 
 /* --- --- --- */
-/* BUY ME A COFFEE STYLING */
+/* ENDNOTE STYLING */
 /* --- --- --- */
-.buymeacoffee {
+.endnote .buymeacoffee {
   display: flex;
   align-items: center;
 }
-.buymeacoffee p, .buymeacoffee a {
+.endnote .buymeacoffee p, .endnote .buymeacoffee a {
   width: 50%;
 }
-.buymeacoffee img {
+.endnote .buymeacoffee img {
   height: 75px;
   margin: auto;
 }
