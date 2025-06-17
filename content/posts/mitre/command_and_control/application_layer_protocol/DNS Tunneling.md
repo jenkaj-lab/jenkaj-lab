@@ -15,7 +15,7 @@ author: Alex Jenkins
 ## Introduction
 The Domain Name System (DNS) is a common Application Layer protocol that communicates over port 53. Many organisations will allow traffic over this protocol because it is essential for translating domain names into IP addresses. Adversaries may use this to their advantage and communicate with their Command and Control (C2) servers over this commonly-used protocol, blending in with normal traffic.  
 
-In today's lab I will be demonstrating my own take on this issue, showcasing one way in which an adversary may exfiltrate data using DNS queries. It walks through the configuration of an infected machine, DNS server, firewall, and includes scripts that demonstrate how adversaries might extract, encode and transmit data. The lab concludes with a blue team investigation into detection and remediation strategies.
+In today's lab I will be demonstrating my own take on this issue, showcasing one way in which an adversary may exfiltrate data using DNS queries. It walks through the configuration of an infected machine, DNS server, gateway, and includes scripts that demonstrate how adversaries might extract, encode and transmit data. The lab concludes with a blue team investigation into detection and remediation strategies.
 
 Though the main technique explored in this lab is `T1081.004`, there is a slight crossover with `T1132.001`. This is because domain queries made over the DNS protocol can fail if any obscure characters exist, therefore all exfiltrated data from the infected machine is encoded with base64 first. This isn't a direct demonstration of the technique itself, but rather a necessary caveat of my chosen extraction method. In this case, the infected machine refers to the system hosting malware, which extracts system information and exfiltrates it to a malicious DNS server.
 
@@ -108,10 +108,10 @@ The server, still running `tail -f /var/log/named/query.log`, will print a log e
 client @0x77042c1ca578 192.168.1.182#36083 (homelab.local): query: homelab.local IN A + (192.168.1.155)
 ```
 
-### Firewall
+### Gateway
 Configure two network adapters - one host-only and one NAT. The host-only should be shared with the infected machine and the NAT will allow you to communicate with wider internet and the rest of the network, essentially acting as a gateway to the internet for the infected machine.
 
-To configure the firewall you need to have two Network Interface Cards (NICs). One will link exclusively with the infected machine, and the other will allow the firewall to freely communicate with the internet and internal network. To do this you'll typically need to setup a Host-Only adapter and a Network Address Translation (NAT) adapter. Or in my case, a bridged adapter because I'm using a Wi-Fi adapter. In any case you'll need to make some configurations on both machines to enable communication between the two machines. If you make the first NIC your normal adapter (i.e. one that can reach the internet without any effort) you should only need to configure the Host-Only link.
+To configure the gateway you need to have two Network Interface Cards (NICs). One will link exclusively with the infected machine, and the other will allow the gateway to freely communicate with the internet and internal network. To do this you'll typically need to setup a Host-Only adapter and a Network Address Translation (NAT) adapter. Or in my case, a bridged adapter because I'm using a Wi-Fi adapter. In any case you'll need to make some configurations on both machines to enable communication between the two machines. If you make the first NIC your normal adapter (i.e. one that can reach the internet without any effort) you should only need to configure the Host-Only link.
 
 To begin, type `ip addr` into your terminal to see your network devices. You should see two NICs, one of which will be down like in the example below:
 ```
@@ -164,30 +164,99 @@ Then you need to configure traffic forwarding:
 sudo sysctl -w net.ipv4.ip_forward=1
 sudo iptables -t nat -A POSTROUTING -o enp0s3 -j MASQUERADE
 sudo iptables -A FORWARD -i enp0s8 -o enp0s3 -j ACCEPT
-sudo iptables -A FORWARD -i enp0s3 -o enp0s8 -m state --state RELATED, ESTABLISHED -j ACCEPT
+sudo iptables -A FORWARD -i enp0s3 -o enp0s8 -m state --state RELATED,ESTABLISHED -j ACCEPT
 ```
+1. Tells the Linux kernel to foward IP packets between network interfaces, allowing the machine to function as a gateway. In doing this you should be able to `ping` any device your gateway can see in the network.
+2. Sets up source NAT (masquerading) on outbound packets through `enp0s3`, replacing internal source IPs with the external interface's IP - allowing any device behind the firewall to access the internet through that single public-facing IP.
+3. Allows forwarding of packets coming from the internal network interface (`enp0s8`) going out to the internet via `enp0s3`.
+4. Allows return traffic from the internet (on `enp0s3`) to reach internal devices (on `enp0s8`), but only if the connection was initiated from the inside - thanks to connection tracking (`--state RELATED,ESTABLISHED`).
 
 You'll also need to modify `/etc/resolv.conf`. Doing this simulates real-world DNS connection by adding the C2 server to the list of recognised nameservers. In other words; you'll be allowing the infected machine to treat your server as its own DNS, enabling IP resolution whilst keeping it isolated to your private network. In real-world scenarios this wouldn't be required because the domain would be internet facing and resolved by a public DNS provider.
 ```
 nameserver 192.168.1.155 # Change this to the IP of your DNS server
 ```
 
-Everything done on the firewall machine up until this point has enabled two-way communication with the infected machine, and established the C2 server as a recognised DNS resolver. The next steps will show some actual firewall cofigurations, which should help to understand the mechanics of DNS tunneling, and setup a sensor to monitor and detect suspicious network activity.
+Everything done on the gateway up until this point has enabled two-way communication with the infected machine, and established the C2 server as a recognised DNS resolver. Next steps will setup a sensor to monitor and detect suspicious network activity.
 
-- firewall
-- zeek
-- wazuh integration
+#### Zeek
+All instructions taken from [Zeek's docs](https://docs.zeek.org/en/master/install.html).
+
+```
+apt-get update
+apt-get install -y --no-install-recommends g++ cmake make libpcap-dev
+echo 'deb https://download.opensuse.org/repositories/security:/zeek/xUbuntu_22.04/ /' | sudo tee /etc/apt/sources.list.d/security:zeek.list
+curl -fsSL https://download.opensuse.org/repositories/security:zeek/xUbuntu_22.04/Release.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/security_zeek.gpg > /dev/null
+sudo apt update
+sudo apt install zeek-7.0
+```
+
+At the time of writing, 7.0 is the latest version of Zeek. I would recommend checking the documentation to make sure this is still the case. Zeek's binary lives in `/opt/zeek/bin/zeek` by default and won't be on your system's PATH. Let's change that both temporarily, and permanently.
+
+By running the two following commands you're temporarily adding a directory to PATH, then making that permanent by appending the command to `.bashrc`. This change will not persist and you will lose the new PATH if you only run the first command. Alternatively, if you don't want to do this, just use Zeek from its base location by appending all commands with `/opt/zeek/bin/zeek`. 
+```
+export PATH="/opt/zeek/bin:$PATH"
+echo 'export PATH="/opt/zeek/bin:$PATH"' >> ~/.bashrc
+```
+
+Test it out with `which` and it should output your path to Zeek:
+```
+alex@homelab-firewall:~$ which zeek
+/opt/zeek/bin/zeek
+```
+
+#### Suricata (instead of zeek?)
+[Suricata Installation Documentation](https://docs.suricata.io/en/latest/quickstart.html#installation)
+```
+sudo apt-get install software-properties-common
+sudo add-apt-repository ppa:oisf/suricata-stable
+sudo apt update
+sudo apt install suricata
+```
+
+We want Suricata to monitor traffic over the host-only interface that we configured earlier. Double check it with `ip addr` if you need to, then modify `/etc/suricata/suricata.yaml`.
+
+Look for the `af-packet` section and change the interface to the one you want to monitor. In my case this is `enp0s8`. You also want to find the `eve-log` section and enable DNS like so:
+```
+- eve-log:
+    enabled: yes
+    filetype: regular
+    filename: eve.json
+    types:
+      - dns:
+          enabled: yes
+```
+
+Run suricata-update to enable all the signatures. I had some errors doing this and had to upgrade first, so make sure to do that.
+```
+sudo apt upgrade
+sudo suricata-update
+```
+
+Now any DNS queries made will appear in `/var/log/suricata/eve.json`.
+
+#### Ingest logs into Wazuh
+With suricata setup the final step is to ingest into Wazuh. You can do that by modifying the agent config file and adding a new `localfile` section to `ossec_config` in `/var/ossec/etc/ossec.conf`.
+```
+<localfile>
+  <log_format>json</log_format>
+  <location>/var/log/suricata/eve.json></location>
+</localfile>
+```
+restart the wazuh agent:
+```
+sudo systemctl restart wazuh-agent
+```
 
 ### Infected Machine
 
-The infected machine doesn't need much in terms of configuration. Out of the box though this won't work, we'll need to connect it to the Host-Only network and route traffic through the firewall or it won't be able to reach the internet. Figure out what your network card's name is using `ip addr` then do the following:
+The infected machine doesn't need much in terms of configuration. Out of the box though this won't work, we'll need to connect it to the Host-Only network and route traffic through the gateway or it won't be able to reach the internet. Figure out what your network card's name is using `ip addr` then do the following:
 ```
 sudo ip link set enp0s3 up
 sudo ip addr add 192.168.56.11/24 dev enp0s3
 sudo ip route add default via 192.168.56.10
 ```
 
-Make sure you change the name of the network interface and the IP addresses in those commands to fit your requirements. By running those three commands you've effectively activated the NIC, assigned an IP address to it, and told it to route traffic through the firewall.
+Make sure you change the name of the network interface and the IP addresses in those commands to fit your requirements. By running those three commands you've effectively activated the NIC, assigned an IP address to it, and told it to route traffic through the gateway.
 
 ## Red Team
 With configuration finished the red team engagement can commence. For this part we assume that the adversary has already managed to get malware onto the victim's machine, and it is now infected. This malware was created specifically for this lab, is written in Python, and is provided in the next code block.
@@ -284,11 +353,58 @@ alex 6.14.10-arch1-1
 With that you've had a basic example of how an adversary might exfiltrate data via the DNS protocol. The example I've given is the first step of communication, where the server has now received information which it can use to identify the infected machine. In future communications the infected machine could prefix messages with this information so that the C2 server may recognise the source of the data.
 
 ## Blue Team
-
-`tshark`
+Let's pretend we're a system admin for a moment and have decided to take a look at some of the network traffic. We load up `tshark` (the command-line version of WireShark) and spot this:
 ```
    25 3.127105183 192.168.1.182 → 8.8.8.8      DNS 118 Standard query 0xe83a TXT YWxleAo=.Ni4xNC4xMC1hcmNoMS0xCg==.homelab.local OPT
    26 3.137087890      8.8.8.8 → 192.168.1.182 DNS 193 Standard query response 0xe83a No such name TXT YWxleAo=.Ni4xNC4xMC1hcmNoMS0xCg==.homelab.local SOA a.root-servers.net OPT
 ```
 
+That's weird... I don't know that domain, and those subdomains look suspicious. Normally we could use some Open-Source Intelligence (OSINT) to checkout the domain and get some juicy details on a malicious network, but our DNS is private so we can't do that. Instead, we take a deeper look at those subdomains... are they encoded?
+```
+root@homelab-firewall:/home/alex# echo "YWxleAo=" | base64 -d
+alex
+root@homelab-firewall:/home/alex# echo "Ni4xNS4yLWFyY2gxLTEK" | base64 -d
+6.15.2-arch1-1
+```
+
+Who's Alex? And is that version information for a computer? You login to one of your managed hosts and sure enough, it's one of your machines:
+```
+[root@infected-machine alex]# cat /etc/passwd | grep alex
+alex:x:1000:1000::/home/alex:/usr/bin/bash
+[root@infected-machine alex]# uname -a
+Linux infected-machine 6.15.2-arch1-1 #1 SMP PREEMPT_DYNAMIC Tue, 10 Jun 2025 21:32:33 +0000 x86_64 GNU/Linux
+```
+
+### Remediation
+So obviously that's very bad. From the information given to us we can determine that a DNS TXT query was made to `YWxleAo=.Ni4xNC4xMC1hcmNoMS0xCg==.homelab.local` and the subdomain is encoded information from your local machine. Normally there would be a full investigation to figure out where the requests are coming from, which would lead to the discovery of the malware, but in this case (because we're focusing on DNS tunneling) we're going to try to stop the tunneling at the network level.
+
+[MITRE](https://attack.mitre.org/techniques/T1071/004/) suggests mitigation by either filtering the network traffic or setting up some means of network intrusion prevention. Network filtering typically looks for DNS requests to unknown, untrusted or bad domains - which isn't very suitable for this use-case. Instead I think our better option is to look at network signatures and prevent them that way. We can also create a firewall rule to block requests to our dodgy domain.
+
+
+
+### Detection
+With the threat remediated we need to setup some detection so that if this ever happens again we can catch it sooner. We're going to be using Suricata to do that. Assuming you followed the configuration steps, any time we run `dns_tunneling.py` Suricata will log the request in `/var/log/suricata/eve.json`. It should look something like:
+```
+{"timestamp":"2025-06-17T10:47:15.623780+0000","flow_id":943919941105773,"in_iface":"enp0s8","event_type":"dns","src_ip":"192.168.56.11","src_port":57476,"dest_ip":"8.8.8.8","dest_port":53,"proto":"UDP","pkt_src":"wire/pcap","dns":{"version":2,"type":"answer","id":48108,"flags":"8183","qr":true,"rd":true,"ra":true,"opcode":0,"rrname":"YWxleAo=.Ni4xNS4yLWFyY2gxLTEK.homelab.local","rrtype":"TXT","rcode":"NXDOMAIN","authorities":[{"rrname":"","rrtype":"SOA","ttl":86399,"soa":{"mname":"a.root-servers.net","rname":"nstld.verisign-grs.com","serial":2025061700,"refresh":1800,"retry":900,"expire":604800,"minimum":86400}}]}}
+```
+
+This is perfect for writing a detection rule in Wazuh. At the moment this sort of thing isn't generating any alerts in the dashboard but we can change that by making a new rule in `/var/ossec/etc/rules/local_rules.xml`.
+```
+<group name="suricata,dns">
+    <rule id="100001" level="7">
+      <if_sid>86603</if_sid>
+      <field name="dns.rrtype">TXT</field>
+      <description>Custom DNS TXT rule chained from Suricata base rule</description>
+    </rule>
+</group>
+```
+If there's any template data here, delete it before adding those changes. This new rule essentially overrides the default suricata rule in Wazuh (86603) if it finds a dns.rrtype of TXT. Choose your own rule id that doesn't conflict with any others (usually custom rules are between 100000 and 120000), and whatever description you want. I've gone with level  7 for this which indicates a "bad word" matching as per [Wazuh's docs](https://documentation.wazuh.com/current/user-manual/ruleset/rules/rules-classification.html). Restart your `wazuh-manager` when you're finished writing your new rule and you should start to see the malware's DNS queries appearing in your Wazuh alerts.
+```
+sudo systemctl restart wazuh-manager
+```
+
+
+
+
 # Conclusion
+In conclusion... yada yada
