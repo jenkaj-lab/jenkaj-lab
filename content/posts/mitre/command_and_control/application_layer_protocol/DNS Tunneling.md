@@ -17,7 +17,7 @@ The Domain Name System (DNS) is a common Application Layer protocol that communi
 
 In today's lab I will be demonstrating my own take on this issue, showcasing one way in which an adversary may exfiltrate data using DNS queries. It walks through the configuration of an infected machine, DNS server, gateway, and includes scripts that demonstrate how adversaries might extract, encode and transmit data. The lab concludes with a blue team investigation into detection and remediation strategies.
 
-Though the main technique explored in this lab is `T1081.004`, there is a slight crossover with `T1132.001`. This is because domain queries made over the DNS protocol can fail if any obscure characters exist, therefore all exfiltrated data from the infected machine is encoded with base64 first. This isn't a direct demonstration of the technique itself, but rather a necessary caveat of my chosen extraction method. In this case, the infected machine refers to the system hosting malware, which extracts system information and exfiltrates it to a malicious DNS server.
+Though the main technique explored in this lab is `T1071.004`, there is a slight crossover with `T1132.001`. This is because domain queries made over the DNS protocol can fail if any obscure characters exist, therefore all exfiltrated data from the infected machine is encoded with base64 first. This isn't a direct demonstration of the technique itself, but rather a necessary caveat of my chosen extraction method. In this case, the infected machine refers to the system hosting malware, which extracts system information and exfiltrates it to a malicious DNS server.
 
 ## Configuration
 For this configuration I am using Ubuntu Server 24.04.2 LTS for the C2 server and gateway, and Arch Linux for the infected machine. You don't need to use Arch for your infected machine, you can use whatever Linux distribution you're comfortable with. I recommend Ubuntu Server for the C2 server because it offers easy-to-install DNS software from the package repository, and is very beginner friendly.
@@ -27,12 +27,12 @@ During this configuration I will expect you to have some experience working with
 My servers and hosts are setup as VMs using VirtualBox. I've decided on this purely because it works well on Linux, and because it's software that I'm familiar with. Use whatever virtualization technology you're comfortable with to setup your three VMs, then continue reading to configure the DNS.
 
 ### C2 Server
-First of all, make sure you download `bind9` and `dnsutils`. `bind9` is what we will be using as the name server, and `dnsutils` gives us some common DNS troubleshooting tools like `nslookup`. Install these with the following command:
+All we're going to be installing on this is a DNS service. To start, make sure you download `bind9` and `dnsutils`. `bind9` is what we will be using as the nameserver, and `dnsutils` gives us some common DNS troubleshooting tools like `nslookup`. Install these with the following command:
 ```
 sudo apt-get install bind9 dnsutils
 ```
 
-I will be covering all the steps required to get this up and running, but I would encourage you to read [Ubuntu's Tutorial](https://documentation.ubuntu.com/server/how-to/networking/install-dns/index.html) on setting up a DNS server because it's much more comprehensive than mine. It's also a very good place to start if you're a beginner and have never setup a DNS server before.
+I will be covering all the steps required to get this up and running, but I would encourage you to read [Ubuntu's documentation](https://documentation.ubuntu.com/server/how-to/networking/install-dns/index.html) on setting up a DNS server because it's much more comprehensive than mine. It's also a very good place to start if you're a beginner and have never setup a DNS server before.
 
 To setup the forward lookup zone you need to modify `/etc/bind/named.conf.local`. You'll change this to use whatever FQDN you want, I've gone with the very creative `homelab.local`, then list it as type _master_ and point it to your new file. This tells the DNS where to look for your forward zone configurations.
 ```
@@ -103,17 +103,17 @@ This command serves two purposes:
 1. Verify that the domain resolves correctly
 2. Create a log entry on the server
 
-The server, still running `tail -f /var/log/named/query.log`, will print a log entry for that query that should look similar to the following snippet:
+The server, still running `tail`, will print a log entry for that query that should look similar to the following snippet:
 ```
 client @0x77042c1ca578 192.168.1.182#36083 (homelab.local): query: homelab.local IN A + (192.168.1.155)
 ```
 
 ### Gateway
-Configure two network adapters - one host-only and one NAT. The host-only should be shared with the infected machine and the NAT will allow you to communicate with wider internet and the rest of the network, essentially acting as a gateway to the internet for the infected machine.
+The gateway manages two networks; a host-only network shared between itself and internal devices, and an external network designed to enable internet access to itself and others using the host-only network. Having the traffic flow through the gateway allows you to filter through it before it gets forwarded, offering you the ability to write detection rules and make risk-based decisions. Based on this definition, this server is a multi-purpose all-in-one firewall, router and gateway.
 
-To configure the gateway you need to have two Network Interface Cards (NICs). One will link exclusively with the infected machine, and the other will allow the gateway to freely communicate with the internet and internal network. To do this you'll typically need to setup a Host-Only adapter and a Network Address Translation (NAT) adapter. Or in my case, a bridged adapter because I'm using a Wi-Fi adapter. In any case you'll need to make some configurations on both machines to enable communication between the two machines. If you make the first NIC your normal adapter (i.e. one that can reach the internet without any effort) you should only need to configure the Host-Only link.
+Using your chosen VM software, assign two Network Interface Cards (NICs) to the gateway server. One of those needs to be host-only to keep the network isolated, the other needs to have internet access. The second adapter will be entirely dependent on your setup, mine needs a bridged adapter but in the most scenarios a NAT adapter will work just fine. If you make the internet-facing adapter first it should work out-of-the-box, needing no prior configuration.
 
-To begin, type `ip addr` into your terminal to see your network devices. You should see two NICs, one of which will be down like in the example below:
+To begin, type `ip addr` into your terminal to see your network devices. You should see two NICs, one of which will be down (example below), this will be your host-only adapter. You should also try to `ping google.com` to make sure you have a working internet connection from the get-go. If not, set that up first.
 ```
 3: enp0s8: <BROADCAST,MULTICAST> mtu 1500 qdisc fq_codel state DOWN group default qlen 1000
     link/ether 08:00:27:7d:98:82 brd ff:ff:ff:ff:ff:ff
@@ -178,34 +178,10 @@ nameserver 192.168.1.155 # Change this to the IP of your DNS server
 
 Everything done on the gateway up until this point has enabled two-way communication with the infected machine, and established the C2 server as a recognised DNS resolver. Next steps will setup a sensor to monitor and detect suspicious network activity.
 
-#### Zeek
-All instructions taken from [Zeek's docs](https://docs.zeek.org/en/master/install.html).
+#### Suricata
+Suricata is an open-source Intrusion Detection System (IDS) and Intrusion Prevention System (IPS). It's great for monitoring network traffic and is a minimal effort install for Ubuntu server. It can get quite expensive on resources if you're building a high volume network, but for a lab environment it should be fine to run it with 2 CPU cores and around 4GB RAM.
 
-```
-apt-get update
-apt-get install -y --no-install-recommends g++ cmake make libpcap-dev
-echo 'deb https://download.opensuse.org/repositories/security:/zeek/xUbuntu_22.04/ /' | sudo tee /etc/apt/sources.list.d/security:zeek.list
-curl -fsSL https://download.opensuse.org/repositories/security:zeek/xUbuntu_22.04/Release.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/security_zeek.gpg > /dev/null
-sudo apt update
-sudo apt install zeek-7.0
-```
-
-At the time of writing, 7.0 is the latest version of Zeek. I would recommend checking the documentation to make sure this is still the case. Zeek's binary lives in `/opt/zeek/bin/zeek` by default and won't be on your system's PATH. Let's change that both temporarily, and permanently.
-
-By running the two following commands you're temporarily adding a directory to PATH, then making that permanent by appending the command to `.bashrc`. This change will not persist and you will lose the new PATH if you only run the first command. Alternatively, if you don't want to do this, just use Zeek from its base location by appending all commands with `/opt/zeek/bin/zeek`. 
-```
-export PATH="/opt/zeek/bin:$PATH"
-echo 'export PATH="/opt/zeek/bin:$PATH"' >> ~/.bashrc
-```
-
-Test it out with `which` and it should output your path to Zeek:
-```
-alex@homelab-firewall:~$ which zeek
-/opt/zeek/bin/zeek
-```
-
-#### Suricata (instead of zeek?)
-[Suricata Installation Documentation](https://docs.suricata.io/en/latest/quickstart.html#installation)
+We'll be following the official [Suricata Installation Documentation](https://docs.suricata.io/en/latest/quickstart.html#installation) during this setup, which begins with the following commands:
 ```
 sudo apt-get install software-properties-common
 sudo add-apt-repository ppa:oisf/suricata-stable
@@ -226,23 +202,24 @@ Look for the `af-packet` section and change the interface to the one you want to
           enabled: yes
 ```
 
-Run suricata-update to enable all the signatures. I had some errors doing this and had to upgrade first, so make sure to do that.
+Now any DNS queries made will appear in `/var/log/suricata/eve.json`.
+
+This bit isn't really necessary for this lab but it may come in handy in the future. If your system is outdated you need to upgrade it first to avoid errors (learn from my mistakes), then run `suricata-update` to enable all the signatures. Signatures in Suricata are basically rules that define patterns in network traffic - meaning doing this activates all the pre-defined rules.
 ```
 sudo apt upgrade
 sudo suricata-update
 ```
 
-Now any DNS queries made will appear in `/var/log/suricata/eve.json`.
-
 #### Ingest logs into Wazuh
-With suricata setup the final step is to ingest into Wazuh. You can do that by modifying the agent config file and adding a new `localfile` section to `ossec_config` in `/var/ossec/etc/ossec.conf`.
+With suricata setup the final step is to ingest the eve logs into Wazuh. You can do that by modifying the agent config file and adding a new `localfile` section to `ossec_config` in `/var/ossec/etc/ossec.conf`.
 ```
 <localfile>
   <log_format>json</log_format>
   <location>/var/log/suricata/eve.json></location>
 </localfile>
 ```
-restart the wazuh agent:
+
+Do that then restart the wazuh agent.
 ```
 sudo systemctl restart wazuh-agent
 ```
