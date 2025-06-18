@@ -6,12 +6,12 @@
     <description>Recent content on Jenkaj-lab</description>
     <generator>Hugo</generator>
     <language>en-gb</language>
-    <lastBuildDate>Wed, 11 Jun 2025 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Wed, 18 Jun 2025 00:00:00 +0000</lastBuildDate>
     <atom:link href="https://jenkaj-lab.github.io/jenkaj-lab/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>DNS Tunneling</title>
       <link>https://jenkaj-lab.github.io/jenkaj-lab/posts/mitre/command_and_control/application_layer_protocol/dns-tunneling/</link>
-      <pubDate>Wed, 11 Jun 2025 00:00:00 +0000</pubDate>
+      <pubDate>Wed, 18 Jun 2025 00:00:00 +0000</pubDate>
       <guid>https://jenkaj-lab.github.io/jenkaj-lab/posts/mitre/command_and_control/application_layer_protocol/dns-tunneling/</guid>
       <description>&lt;table&gt;&#xA;  &lt;thead&gt;&#xA;      &lt;tr&gt;&#xA;          &lt;th&gt;Category&lt;/th&gt;&#xA;          &lt;th&gt;ID&lt;/th&gt;&#xA;          &lt;th&gt;Description&lt;/th&gt;&#xA;      &lt;/tr&gt;&#xA;  &lt;/thead&gt;&#xA;  &lt;tbody&gt;&#xA;      &lt;tr&gt;&#xA;          &lt;td&gt;Tactic&lt;/td&gt;&#xA;          &lt;td&gt;TA0011&lt;/td&gt;&#xA;          &lt;td&gt;Command and Control&lt;/td&gt;&#xA;      &lt;/tr&gt;&#xA;      &lt;tr&gt;&#xA;          &lt;td&gt;Techniques&lt;/td&gt;&#xA;          &lt;td&gt;T1071, T1132&lt;/td&gt;&#xA;          &lt;td&gt;Application Layer Protocol, Data Encoding&lt;/td&gt;&#xA;      &lt;/tr&gt;&#xA;      &lt;tr&gt;&#xA;          &lt;td&gt;Sub-Techniques&lt;/td&gt;&#xA;          &lt;td&gt;T1071.004, T1132.001&lt;/td&gt;&#xA;          &lt;td&gt;DNS, Standard Encoding&lt;/td&gt;&#xA;      &lt;/tr&gt;&#xA;  &lt;/tbody&gt;&#xA;&lt;/table&gt;</description>
     </item>
@@ -21,6 +21,13 @@
       <pubDate>Fri, 25 Apr 2025 00:00:00 +0000</pubDate>
       <guid>https://jenkaj-lab.github.io/jenkaj-lab/posts/mitre/brute_force/password_guessing/ldap-password-guessing/</guid>
       <description>&lt;table&gt;&#xA;  &lt;thead&gt;&#xA;      &lt;tr&gt;&#xA;          &lt;th&gt;Category&lt;/th&gt;&#xA;          &lt;th&gt;ID&lt;/th&gt;&#xA;          &lt;th&gt;Description&lt;/th&gt;&#xA;      &lt;/tr&gt;&#xA;  &lt;/thead&gt;&#xA;  &lt;tbody&gt;&#xA;      &lt;tr&gt;&#xA;          &lt;td&gt;Tactic&lt;/td&gt;&#xA;          &lt;td&gt;TA0006&lt;/td&gt;&#xA;          &lt;td&gt;Credential Access&lt;/td&gt;&#xA;      &lt;/tr&gt;&#xA;      &lt;tr&gt;&#xA;          &lt;td&gt;Technique&lt;/td&gt;&#xA;          &lt;td&gt;T1110&lt;/td&gt;&#xA;          &lt;td&gt;Brute Force&lt;/td&gt;&#xA;      &lt;/tr&gt;&#xA;      &lt;tr&gt;&#xA;          &lt;td&gt;Sub-Technique&lt;/td&gt;&#xA;          &lt;td&gt;T1110.001&lt;/td&gt;&#xA;          &lt;td&gt;Password Guessing&lt;/td&gt;&#xA;      &lt;/tr&gt;&#xA;  &lt;/tbody&gt;&#xA;&lt;/table&gt;</description>
+    </item>
+    <item>
+      <title></title>
+      <link>https://jenkaj-lab.github.io/jenkaj-lab/about/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>https://jenkaj-lab.github.io/jenkaj-lab/about/</guid>
+      <description>&lt;p&gt;My name is Alex. I&amp;rsquo;m a cyber security professional and enthusiast. I write technical blog posts covering techniques from the MITRE ATT&amp;amp;CK framework, complete with configuration, red team engagement, blue team investigation and response.&lt;/p&gt;&#xA;&lt;p&gt;My background is in carpentry, but I always loved computers. One day I decided to give up on construction and throw myself back into college to learn more about programming. In college I had a taster of cyber security through open days and optional courses - enough to get excited about it, but nothing substantial. Two years of college led to four years of university studying a course in cyber security and forensic computing. I graduated with a first class honours and a month later I landed a job as a SOC analyst. That was back in July 2024.&lt;/p&gt;</description>
     </item>
     <item>
       <title>Legal &amp; Ethical Disclaimer</title>
