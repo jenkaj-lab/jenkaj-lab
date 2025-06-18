@@ -409,15 +409,9 @@ From the information found by our lovely sysadmin we can determine that a DNS TX
 The best and most secure way to block any unwanted domains is to use an allow list. An allow list basically acts as a whitelist and is a file with a long list of domains which your firewall would consider safe to visit. The issue with that is every organization has their own definition of what a _safe_ domain is, which means they are not readily available and we would need to build an allow list from scratch. That is a viable option but it would be very time consuming and I don't know all my regular domains from the top of my head. In this case the better option is to begin with a deny list (which is the opposite of an allow list) and build an allow list on the side as you begin to discover domains that are suitable for you. Deny lists, AKA blocklists, are prevalent throughout the internet and many threat intelligence feeds provide regular updates to those lists. That makes this a quick and easy solution to blocking all the **known** malicious domains.
 
 We're going to configure suricata to use our deny list, utilizing its IPS functionality. There is already a `dns-events.rules` file for Suricata, but we can't use this because it's actively maintained and our changes might get overwritten. Instead, let's make our own file called `/var/lib/suricata/rules/local.rules`.
+
 ```
-alert dns any any -> any any (
-  msg:"Malicious DNS Query";
-  dns.query;
-  dataset:isset,mal_domains,type string,load /etc/suricata/rules/malicious_domains.lst,memcap 10mb,hashsize 1024;
-  classtype:trojan-activity;
-  sid:1000001;
-  rev:1;
-)
+alert dns any any -> any any (msg:"Malicious DNS Query"; dns.query; dataset:isset,mal_domains,type string,load /var/lib/suricata/rules/malicious_domains.lst; sid:1000001; rev:1;)
 ```
 
 Then you need to enable the rule in `/etc/suricata/suricata.yaml`. Find the `rule-files` section and add an entry for `local.rules`.
@@ -432,14 +426,43 @@ Then restart Suricata to apply the changes.
 sudo systemctl restart suricata
 ```
 
-Make a deny list in the same location called `/var/lib/suricata/rules/malicious_domains.lst`. For now just put on entry in there `homelab.local`. Then you need to base64 encode it for it to be readable by your new rule.
-```
-base64 /var/lib/suricata/rules/malicious_domains.lst > /var/lib/suricata/rules/malicious_domains.lst
+Make a deny list in the same location called `/var/lib/suricata/rules/malicious_domains.lst`. For now just put `homelab.local` in there. Annoyingly you need to base64 encode each item in this file for it to be readable by your new rule. That's very tedious to manually change each item so I've made a script to automate it. If you use it just make sure to change the file path if you've gone with a different name.
+
+``` python
+import base64
+
+plaintext_file = "/var/lib/suricata/rules/malicious_domains.lst"
+encoded_lines = []
+
+with open(plaintext_file, "r") as file:
+    for line in file:
+        encoded_lines.append(base64.b64encode(line.encode("UTF-8")))
+
+with open(plaintext_file, "w") as file:
+    for line in encoded_lines:
+        file.write(line.decode("UTF-8")+"\n")
 ```
 
-If you noticed earlier, a key term used when describing a deny list was _known malicious domains_. `homelab.local` is not a known malicious domain to the average person. So what we need to do, for this domain and any future domains we encounter that aren't included in any deny lists, is add a manual entry.
+Now if you monitor `fast.log` and do an `nslookup` on `homelab.local` you'll see Suricata trigger your new rule.
 
-- show manual entry
+```
+root@homelab-firewall:/home/alex# tail -f /var/log/suricata/fast.log
+06/18/2025-15:05:54.805067  [**] [1:1000001:1] Malicious DNS Query [**] [Classification: (null)] [Priority: 3] {UDP} 192.168.56.11:43692 -> 192.168.56.10:53
+```
+
+If you noticed earlier, a key term I used when describing a deny list was _known malicious domains_. `homelab.local` is not a known malicious domain to most lists. What we've done is manually entered this domain to a deny list which is being read by Suricata. You can use any deny list you want and then append that domain to end and it will work just fine, with the benefit of blocking other unwanted domains.
+
+Suricata runs in IDS mode by default, meaning it won't actively block this traffic. We need enable `nfqueue` mode for this. Open `/etc/default/suricata` and change the `LISTENMODE` like so:
+```
+# LISTENMODE=af-packet
+LISTENMODE=nfqueue
+```
+
+```
+sudo systemctl restart suricata
+```
+
+
 
 # Conclusion
 In conclusion, DNS tunneling is a technique used to blend C2 communications with normal application layer traffic in an attempt to remain undetected. The method covered in this lab showcased data exfiltration via DNS queries, where the information was encoded and prefixed as subdomains. The detection of this type of exfiltration proves to be difficult because base64 strings, when matched with regular expressions, are too similar to normal domains. We observed that the queries made were searching for TXT records, a technique whereby a machine tries to resolve a domain name, which we included in a detection rule. When the domain query reached the C2 server, a listener decoded the subdomains and extracted the user and system info. To mitigate this issue a deny list was implemented with a manual entry for `homelab.local`.

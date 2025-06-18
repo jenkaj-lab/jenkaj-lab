@@ -375,26 +375,34 @@ Linux infected-machine 6.15.2-arch1-1 #1 SMP PREEMPT_DYNAMIC Tue, 10 Jun 2025 21
 <p><a href="https://attack.mitre.org/techniques/T1071/004/">MITRE</a> suggests mitigation by either filtering the network traffic or setting up some means of network intrusion prevention. Network filtering typically looks for DNS requests to unknown, untrusted or bad domains, whereas the alternative looks for network signatures. The trouble with this is writing a rule to match base64 signatures is difficult because Suricata and Wazuh don&rsquo;t offer many options beyond regex. And because base64 is essentially just a string of safe characters, regex queries match on almost every other word including homelab and local. For this reason, the only real viable option is network filtering.</p>
 <p>The best and most secure way to block any unwanted domains is to use an allow list. An allow list basically acts as a whitelist and is a file with a long list of domains which your firewall would consider safe to visit. The issue with that is every organization has their own definition of what a <em>safe</em> domain is, which means they are not readily available and we would need to build an allow list from scratch. That is a viable option but it would be very time consuming and I don&rsquo;t know all my regular domains from the top of my head. In this case the better option is to begin with a deny list (which is the opposite of an allow list) and build an allow list on the side as you begin to discover domains that are suitable for you. Deny lists, AKA blocklists, are prevalent throughout the internet and many threat intelligence feeds provide regular updates to those lists. That makes this a quick and easy solution to blocking all the <strong>known</strong> malicious domains.</p>
 <p>We&rsquo;re going to configure suricata to use our deny list, utilizing its IPS functionality. There is already a <code>dns-events.rules</code> file for Suricata, but we can&rsquo;t use this because it&rsquo;s actively maintained and our changes might get overwritten. Instead, let&rsquo;s make our own file called <code>/var/lib/suricata/rules/local.rules</code>.</p>
-<pre tabindex="0"><code>alert dns any any -&gt; any any (
-  msg:&#34;Malicious DNS Query&#34;;
-  dns.query;
-  dataset:isset,mal_domains,type string,load /etc/suricata/rules/malicious_domains.lst,memcap 10mb,hashsize 1024;
-  classtype:trojan-activity;
-  sid:1000001;
-  rev:1;
-)
+<pre tabindex="0"><code>alert dns any any -&gt; any any (msg:&#34;Malicious DNS Query&#34;; dns.query; dataset:isset,mal_domains,type string,load /var/lib/suricata/rules/malicious_domains.lst; sid:1000001; rev:1;)
 </code></pre><p>Then you need to enable the rule in <code>/etc/suricata/suricata.yaml</code>. Find the <code>rule-files</code> section and add an entry for <code>local.rules</code>.</p>
 <pre tabindex="0"><code>rules-files:
   - local.rules
 </code></pre><p>Then restart Suricata to apply the changes.</p>
 <pre tabindex="0"><code>sudo systemctl restart suricata
-</code></pre><p>Make a deny list in the same location called <code>/var/lib/suricata/rules/malicious_domains.lst</code>. For now just put on entry in there <code>homelab.local</code>. Then you need to base64 encode it for it to be readable by your new rule.</p>
-<pre tabindex="0"><code>base64 /var/lib/suricata/rules/malicious_domains.lst &gt; /var/lib/suricata/rules/malicious_domains.lst
-</code></pre><p>If you noticed earlier, a key term used when describing a deny list was <em>known malicious domains</em>. <code>homelab.local</code> is not a known malicious domain to the average person. So what we need to do, for this domain and any future domains we encounter that aren&rsquo;t included in any deny lists, is add a manual entry.</p>
-<ul>
-<li>show manual entry</li>
-</ul>
-<h1 id="conclusion">Conclusion</h1>
+</code></pre><p>Make a deny list in the same location called <code>/var/lib/suricata/rules/malicious_domains.lst</code>. For now just put <code>homelab.local</code> in there. Annoyingly you need to base64 encode each item in this file for it to be readable by your new rule. That&rsquo;s very tedious to manually change each item so I&rsquo;ve made a script to automate it. If you use it just make sure to change the file path if you&rsquo;ve gone with a different name.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> base64
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>plaintext_file <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;/var/lib/suricata/rules/malicious_domains.lst&#34;</span>
+</span></span><span style="display:flex;"><span>encoded_lines <span style="color:#f92672">=</span> []
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">with</span> open(plaintext_file, <span style="color:#e6db74">&#34;r&#34;</span>) <span style="color:#66d9ef">as</span> file:
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> line <span style="color:#f92672">in</span> file:
+</span></span><span style="display:flex;"><span>        encoded_lines<span style="color:#f92672">.</span>append(base64<span style="color:#f92672">.</span>b64encode(line<span style="color:#f92672">.</span>encode(<span style="color:#e6db74">&#34;UTF-8&#34;</span>)))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">with</span> open(plaintext_file, <span style="color:#e6db74">&#34;w&#34;</span>) <span style="color:#66d9ef">as</span> file:
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> line <span style="color:#f92672">in</span> encoded_lines:
+</span></span><span style="display:flex;"><span>        file<span style="color:#f92672">.</span>write(line<span style="color:#f92672">.</span>decode(<span style="color:#e6db74">&#34;UTF-8&#34;</span>)<span style="color:#f92672">+</span><span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>)
+</span></span></code></pre></div><p>Now if you monitor <code>fast.log</code> and do an <code>nslookup</code> on <code>homelab.local</code> you&rsquo;ll see Suricata trigger your new rule.</p>
+<pre tabindex="0"><code>root@homelab-firewall:/home/alex# tail -f /var/log/suricata/fast.log
+06/18/2025-15:05:54.805067  [**] [1:1000001:1] Malicious DNS Query [**] [Classification: (null)] [Priority: 3] {UDP} 192.168.56.11:43692 -&gt; 192.168.56.10:53
+</code></pre><p>If you noticed earlier, a key term I used when describing a deny list was <em>known malicious domains</em>. <code>homelab.local</code> is not a known malicious domain to most lists. What we&rsquo;ve done is manually entered this domain to a deny list which is being read by Suricata. You can use any deny list you want and then append that domain to end and it will work just fine, with the benefit of blocking other unwanted domains.</p>
+<p>Suricata runs in IDS mode by default, meaning it won&rsquo;t actively block this traffic. We need enable <code>nfqueue</code> mode for this. Open <code>/etc/default/suricata</code> and change the <code>LISTENMODE</code> like so:</p>
+<pre tabindex="0"><code># LISTENMODE=af-packet
+LISTENMODE=nfqueue
+</code></pre><pre tabindex="0"><code>sudo systemctl restart suricata
+</code></pre><h1 id="conclusion">Conclusion</h1>
 <p>In conclusion, DNS tunneling is a technique used to blend C2 communications with normal application layer traffic in an attempt to remain undetected. The method covered in this lab showcased data exfiltration via DNS queries, where the information was encoded and prefixed as subdomains. The detection of this type of exfiltration proves to be difficult because base64 strings, when matched with regular expressions, are too similar to normal domains. We observed that the queries made were searching for TXT records, a technique whereby a machine tries to resolve a domain name, which we included in a detection rule. When the domain query reached the C2 server, a listener decoded the subdomains and extracted the user and system info. To mitigate this issue a deny list was implemented with a manual entry for <code>homelab.local</code>.</p>
 <p>During this lab we learned how to configure a DNS server, install a multi-purpose gateway and firewall system, and setup an infected host machine. The malware and listener used by the red team were custom-made for this exercise using Python. Our blue team discovered the suspicious domain queries using <code>tshark</code>, wrote detection rules in Wazuh after ingesting logs with Suricata, and remediated the threat using network filtering as recommended by the MITRE ATT&amp;CK framework.</p>
   
