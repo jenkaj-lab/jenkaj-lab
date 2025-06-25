@@ -29,9 +29,9 @@
       
   
   
-  <div class="meta">
-    <p><i class="fas fa-user"></i> Alex Jenkins</p> 
-    <p><i class="fas fa-calendar-alt"></i> June 18, 2025</p>
+  <div class="post_metadata">
+    <p class="author"><i class="fas fa-user"></i> Alex Jenkins</p> 
+    <p class="date"><i class="fas fa-calendar-alt"></i> June 18, 2025</p>
   </div>
   
 
@@ -142,7 +142,7 @@ Address: 192.168.1.155
 <blockquote>
 <p>Make sure you change the name of the network interface and the IP address to fit your requirements.</p></blockquote>
 <pre tabindex="0"><code>sudo ip link set enp0s8 up
-ip addr add 192.168.56.10/24 dev enp0s8
+sudo ip addr add 192.168.56.10/24 dev enp0s8
 </code></pre><p>If you run <code>ip addr</code> again you should see that your adapter now is now <em>UP</em>, and has the IP address you assigned.</p>
 <pre tabindex="0"><code>3: enp0s8: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc fq_codel state UP group default qlen 1000
     link/ether 08:00:27:7d:98:82 brd ff:ff:ff:ff:ff:ff
@@ -162,8 +162,16 @@ sudo iptables -A FORWARD -i enp0s3 -o enp0s8 -m state --state RELATED,ESTABLISHE
 <li>Allows forwarding of packets coming from the internal network interface (<code>enp0s8</code>) going out to the internet via <code>enp0s3</code>.</li>
 <li>Allows return traffic from the internet (on <code>enp0s3</code>) to reach internal devices (on <code>enp0s8</code>), but only if the connection was initiated from the inside - thanks to connection tracking (<code>--state RELATED,ESTABLISHED</code>).</li>
 </ol>
-<p>The final step is to add a new entry to <code>/etc/resolv.conf</code>. Doing this simulates real-world DNS connection by adding the C2 server to the list of recognised nameservers. In other words you&rsquo;ll be telling the machine to treat the C2 server as its own DNS, enabling IP resolution whilst keeping it isolated to your private network. In real-world scenarios this wouldn&rsquo;t be required because the domain would be internet facing and resolved by a public DNS provider.</p>
-<pre tabindex="0"><code>nameserver 192.168.1.155 # Change this to the IP of your DNS server
+<p>v not correct needs to be changed
+Get <code>dnsmasq</code> to accept and forward DNS requests</p>
+<pre tabindex="0"><code>sudo apt install dnsmasq
+</code></pre><p>Stop and disable <code>systemd-resolved</code> to avoid conflicts</p>
+<pre tabindex="0"><code>sudo systemctl stop systemd-resolved
+sudo systemctl disable systemd-resolved
+</code></pre><p>edit <code>/etc/dnsmasq.conf</code> and add these lines to the bottom</p>
+<pre tabindex="0"><code>interface=enp0s8  # Change to the interface you want to bind to
+listen-address=192.168.56.10  # Make this your listening address (address of interface)
+server=192.168.1.155  # Make this the IP of your C2 server
 </code></pre><p>Everything done on the gateway up until this point has enabled two-way communication with the infected machine, and established the C2 server as a recognised DNS resolver. The next steps will setup a sensor to monitor and detect suspicious network activity and forward that activity to Wazuh.</p>
 <h4 id="suricata">Suricata</h4>
 <p>Suricata is an open-source Intrusion Detection System (IDS) and Intrusion Prevention System (IPS). It&rsquo;s great for monitoring network traffic and is a minimal effort install for Ubuntu server. It can get quite expensive on resources if you&rsquo;re building a high volume network, but for a lab environment it should be fine to run it with around 2 CPU cores and 4GB RAM. We&rsquo;ll be following Suricata&rsquo;s official <a href="https://docs.suricata.io/en/latest/quickstart.html#installation">installation documentation</a> during this setup, which begins with the following commands:</p>
@@ -401,16 +409,26 @@ Linux infected-machine 6.15.2-arch1-1 #1 SMP PREEMPT_DYNAMIC Tue, 10 Jun 2025 21
 <p>Suricata runs in IDS mode by default, meaning it won&rsquo;t actively block this traffic. We need enable <code>nfqueue</code> mode for this. Open <code>/etc/default/suricata</code> and change the <code>LISTENMODE</code> like so:</p>
 <pre tabindex="0"><code># LISTENMODE=af-packet
 LISTENMODE=nfqueue
+</code></pre><p><code>/etc/suricata/suricata.yaml</code></p>
+<pre tabindex="0"><code>nfq:
+  mode: accept
+  fail-open: no
 </code></pre><pre tabindex="0"><code>sudo systemctl restart suricata
+</code></pre><p>Configure the IPS for ISO layer 3 - network layer using <code>iptables</code></p>
+<pre tabindex="0"><code>sudo iptables -I FORWARD -i enp0s8 -j NFQUEUE
 </code></pre><h1 id="conclusion">Conclusion</h1>
 <p>In conclusion, DNS tunneling is a technique used to blend C2 communications with normal application layer traffic in an attempt to remain undetected. The method covered in this lab showcased data exfiltration via DNS queries, where the information was encoded and prefixed as subdomains. The detection of this type of exfiltration proves to be difficult because base64 strings, when matched with regular expressions, are too similar to normal domains. We observed that the queries made were searching for TXT records, a technique whereby a machine tries to resolve a domain name, which we included in a detection rule. When the domain query reached the C2 server, a listener decoded the subdomains and extracted the user and system info. To mitigate this issue a deny list was implemented with a manual entry for <code>homelab.local</code>.</p>
 <p>During this lab we learned how to configure a DNS server, install a multi-purpose gateway and firewall system, and setup an infected host machine. The malware and listener used by the red team were custom-made for this exercise using Python. Our blue team discovered the suspicious domain queries using <code>tshark</code>, wrote detection rules in Wazuh after ingesting logs with Suricata, and remediated the threat using network filtering as recommended by the MITRE ATT&amp;CK framework.</p>
   
     <div class="endnote">
-    <p>Thanks for reading, I hope you found value in this content. Take a look at some of my other posts if you liked it, and check out my socials if you have any feedback or just want to connect.</p>
-    <div class="buymeacoffee">
-        <p>I put a lot of time and effort into making these posts. If you enjoy this sort of thing and want to support me in future projects, a little coffee goes a long way <i class="fa-solid fa-heart" style="color: red;"></i></p>
-        <a href="https://coff.ee/jenkaj"><img src="https://jenkaj-lab.github.io/jenkaj-lab/images/buymeacoffee.png" /></a>
+    <p>Thanks for reading, I hope you found value in this content. Take a look at some of my other posts if you liked it and check out my socials if you have any feedback, or just want to connect. I put a lot of time and effort into making these posts so if you enjoy this content and want to support me - a little coffee goes a long way <i class="fa-solid fa-heart" style="color: red;"></i></p>
+    <div class="clickables">
+        <div class="socials">
+    <a class="github" href="https://github.com/jenkaj-lab" style="color: black;"><i class="fa-brands fa-github"></i></a>
+    <a class="linkedin" href="https://linkedin.com/in/alex-jenkins-b00811243" style="color: rgb(0,65,130);"><i class="fa-brands fa-linkedin"></i></a>
+</div>
+    
+        <a class="buy_me_a_coffee" href="https://coff.ee/jenkaj"><img src="https://jenkaj-lab.github.io/jenkaj-lab/images/buymeacoffee.png" /></a>
     </div>
 </div>
 
@@ -422,8 +440,8 @@ LISTENMODE=nfqueue
     <nav> 
         <div class="left">
             <div class="socials">
-    <a href="https://github.com/jenkaj-lab" style="color: black;"><i class="fa-brands fa-github"></i></a>
-    <a href="https://linkedin.com/in/alex-jenkins-b00811243" style="color: rgb(0,65,130);"><i class="fa-brands fa-linkedin"></i></a>
+    <a class="github" href="https://github.com/jenkaj-lab" style="color: black;"><i class="fa-brands fa-github"></i></a>
+    <a class="linkedin" href="https://linkedin.com/in/alex-jenkins-b00811243" style="color: rgb(0,65,130);"><i class="fa-brands fa-linkedin"></i></a>
 </div>
 
         </div>

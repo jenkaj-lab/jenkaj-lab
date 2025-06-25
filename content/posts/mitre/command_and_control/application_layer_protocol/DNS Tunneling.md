@@ -123,7 +123,7 @@ Use the `ip` command to enable this interface, and assign it a new IP address.
 > Make sure you change the name of the network interface and the IP address to fit your requirements.
 ```
 sudo ip link set enp0s8 up
-ip addr add 192.168.56.10/24 dev enp0s8
+sudo ip addr add 192.168.56.10/24 dev enp0s8
 ```
 
 If you run `ip addr` again you should see that your adapter now is now _UP_, and has the IP address you assigned.
@@ -150,9 +150,23 @@ I'll explain these commands in the order they're written:
 3. Allows forwarding of packets coming from the internal network interface (`enp0s8`) going out to the internet via `enp0s3`.
 4. Allows return traffic from the internet (on `enp0s3`) to reach internal devices (on `enp0s8`), but only if the connection was initiated from the inside - thanks to connection tracking (`--state RELATED,ESTABLISHED`).
 
-The final step is to add a new entry to `/etc/resolv.conf`. Doing this simulates real-world DNS connection by adding the C2 server to the list of recognised nameservers. In other words you'll be telling the machine to treat the C2 server as its own DNS, enabling IP resolution whilst keeping it isolated to your private network. In real-world scenarios this wouldn't be required because the domain would be internet facing and resolved by a public DNS provider.
+v not correct needs to be changed
+Get `dnsmasq` to accept and forward DNS requests
 ```
-nameserver 192.168.1.155 # Change this to the IP of your DNS server
+sudo apt install dnsmasq
+```
+
+Stop and disable `systemd-resolved` to avoid conflicts
+```
+sudo systemctl stop systemd-resolved
+sudo systemctl disable systemd-resolved
+```
+
+edit `/etc/dnsmasq.conf` and add these lines to the bottom
+```
+interface=enp0s8  # Change to the interface you want to bind to
+listen-address=192.168.56.10  # Make this your listening address (address of interface)
+server=192.168.1.155  # Make this the IP of your C2 server
 ```
 
 Everything done on the gateway up until this point has enabled two-way communication with the infected machine, and established the C2 server as a recognised DNS resolver. The next steps will setup a sensor to monitor and detect suspicious network activity and forward that activity to Wazuh.
@@ -458,10 +472,22 @@ Suricata runs in IDS mode by default, meaning it won't actively block this traff
 LISTENMODE=nfqueue
 ```
 
+`/etc/suricata/suricata.yaml`
+```
+nfq:
+  mode: accept
+  fail-open: no
+```
+
 ```
 sudo systemctl restart suricata
 ```
 
+Configure the IPS for ISO layer 3 - network layer using `iptables`
+
+```
+sudo iptables -I FORWARD -i enp0s8 -j NFQUEUE
+```
 
 
 # Conclusion

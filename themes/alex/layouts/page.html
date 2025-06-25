@@ -1,9 +1,9 @@
 {{ define "main" }}
   {{ $dateHuman := .Date | time.Format ":date_long" }}
   {{ if in .File.Path "posts/" }}
-  <div class="meta">
-    <p><i class="fas fa-user"></i> {{ .Params.author }}</p> 
-    <p><i class="fas fa-calendar-alt"></i> {{ $dateHuman }}</p>
+  <div class="post_metadata">
+    <p class="author"><i class="fas fa-user"></i> {{ .Params.author }}</p> 
+    <p class="date"><i class="fas fa-calendar-alt"></i> {{ $dateHuman }}</p>
   </div>
   {{ end }}
 

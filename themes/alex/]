@@ -34,12 +34,12 @@ main {
 table {
   width: 100%;
   border-collapse: collapse;
-  margin: 0;
-  font-size: 0.9em;
+  margin: 1em 0;
+  font-size: 0.95em;
 }
 th, td {
   border: 1px solid #ddd;
-  padding: 0.5em;
+  padding: 0.75em;
   text-align: left;
 }
 th {
@@ -86,6 +86,8 @@ img {
   height: auto;
   display: block;
   margin: 1em auto;
+  border: 1px solid #ddd;
+  border-radius: 3px;
 }
 
 /* --- --- --- */
@@ -188,12 +190,12 @@ footer nav .right a:hover {
 .post_metadata {
   display: flex;
   align-items: center;
-  font-size: 0.9em;
-  gap: 1em;
+  font-size: 0.75em;
 }
 .post_metadata .author {
   margin: 0;
   padding: 0;
+  flex: 1;
 }
 .post_metadata .date {
   margin: 0;
@@ -221,25 +223,23 @@ footer nav .right a:hover {
 /* ENDNOTE STYLING */
 /* --- --- --- */
 .endnote {
-  border-top: 1px solid #1e1e1e;
-  padding: 0;
-  margin: 0;
+  line-height: 1.3;
+  padding: 1em 0;
 }
-.endnote .clickables {
+.endnote p, .endnote a {
+  margin: 0.5em 0;
+  padding: 0;
+}
+.endnote .buymeacoffee {
   display: flex;
   align-items: center;
 }
-.endnote .socials {
-  flex: 1;
-  gap: 0.75em;
+.endnote .buymeacoffee p, .endnote .buymeacoffee a {
+  width: 50%;
 }
-.endnote .socials i {
-  font-size: 2.5em;
-}
-.endnote .buy_me_a_coffee img {
-  height: 4em;
-  margin: 0;
-  border-radius: 25px;
+.endnote .buymeacoffee img {
+  height: 70px;
+  margin: 0 auto;
 }
 
 /* --- --- --- */
